@@ -149,12 +149,12 @@ export default function TourCard({
           <GreenBtn
             text="Book"
             customStyles="font-semibold w-24"
-            action={`/tours/${slug}`}
+            action={`/user-info?tour=${slug}`}
             onClick={(ev) => {
               // prevent parent navigation when clicking the button
               ev?.stopPropagation();
-              // still navigate directly from the button
-              router.push(`/tours/${slug}`);
+              // navigate directly to user info flow
+              router.push(`/user-info?tour=${slug}`);
             }}
           />
         </div>

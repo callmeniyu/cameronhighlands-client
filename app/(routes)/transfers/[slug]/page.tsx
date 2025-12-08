@@ -218,7 +218,7 @@ export default async function TransferDetailPage({
               </div>
             </div>
             <BookNowButton
-              bookingUrl={`/booking/transfer/${transferDetails.slug}`}
+              bookingUrl={`/user-info?transfer=${transferDetails.slug}`}
               isAvailable={transferDetails.isAvailable !== false}
               packageName={transferDetails.title}
               text="Book Now"
@@ -388,7 +388,7 @@ export default async function TransferDetailPage({
               </div>
             </div>
             <BookNowButton
-              bookingUrl={`/booking/transfer/${transferDetails.slug}`}
+              bookingUrl={`/user-info?transfer=${transferDetails.slug}`}
               isAvailable={transferDetails.isAvailable !== false}
               packageName={transferDetails.title}
               text="Book Now"
@@ -429,7 +429,7 @@ export default async function TransferDetailPage({
       {/* Book Button */}
       <div className="text-center">
         <BookNowButton
-          bookingUrl={`/booking/transfer/${transferDetails.slug}`}
+          bookingUrl={`/user-info?transfer=${transferDetails.slug}`}
           isAvailable={transferDetails.isAvailable !== false}
           packageName={transferDetails.title}
           text="Book this transfer"

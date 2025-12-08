@@ -249,7 +249,7 @@ export default function ToursPage() {
           src="/images/tour_main.png"
           alt="Van transfers background"
           fill
-          className="object-cover"
+          className="object-cover mt-12"
           priority
         />
         {/* Light black overlay */}

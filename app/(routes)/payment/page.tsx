@@ -1,310 +1,205 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-import DeferredCheckoutForm from "@/components/ui/DeferredCheckoutForm";
-import { useToast } from "@/context/ToastContext";
-import { paymentApi } from "@/lib/paymentApi";
-import Image from "next/image";
+import {
+  FiCreditCard,
+  FiShield,
+  FiArrowLeft,
+  FiArrowRight,
+} from "react-icons/fi";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+const SUMMARY = {
+  title: "Mossy Forest Adventure",
+  date: "12 Jan 2025",
+  time: "7:00 AM",
+  guests: "2 adults, 1 child",
+  subtotal: 235,
+  fees: 10,
+};
+
+const METHODS = ["Card", "FPX", "PayPal"];
 
 export default function PaymentPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { showToast } = useToast();
+  const params = useSearchParams();
+  const tour = params.get("tour") || "mossy-forest-adventure";
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-  const [bookingData, setBookingData] = useState<any>(null);
-  const [isCartBooking, setIsCartBooking] = useState(false);
-  const [isNavigatingAway, setIsNavigatingAway] = useState(false);
+  const total = SUMMARY.subtotal + SUMMARY.fees;
 
-  useEffect(() => {
-    const validatePaymentData = async () => {
-      try {
-        console.log("[PAYMENT_PAGE] Validating payment data...");
+  const handlePay = () => {
+    // Demo flow: generate a demo booking id and redirect to the canonical
+    // server confirmation page so demo and prod behavior matches.
+    // For cart-like demo support, use `from=cart` as a query param.
+    const isCart = params.get("from") === "cart";
+    const demoId = `demo-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-        // Get payment data from URL params
-        const bookingDataParam = searchParams.get("bookingData");
-        const cartDataParam = searchParams.get("cartData");
-        const contactInfoParam = searchParams.get("contactInfo");
-        const amountParam = searchParams.get("amount");
-
-        if (!amountParam) {
-          throw new Error("Payment amount is missing");
-        }
-
-        if (cartDataParam && contactInfoParam) {
-          // Cart booking flow
-          console.log("[PAYMENT_PAGE] Processing cart booking payment");
-          setIsCartBooking(true);
-
-          const cartData = JSON.parse(decodeURIComponent(cartDataParam));
-          const contactInfo = JSON.parse(decodeURIComponent(contactInfoParam));
-
-          setBookingData({
-            cartData,
-            contactInfo,
-            amount: parseFloat(amountParam),
-          });
-        } else if (bookingDataParam) {
-          // Single booking flow
-          console.log("[PAYMENT_PAGE] Processing single booking payment");
-          setIsCartBooking(false);
-
-          const parsedBookingData = JSON.parse(
-            decodeURIComponent(bookingDataParam)
-          );
-          setBookingData({
-            ...parsedBookingData,
-            amount: parseFloat(amountParam),
-          });
-        } else {
-          throw new Error("Missing booking data");
-        }
-
-        console.log("[PAYMENT_PAGE] Payment data validated successfully");
-      } catch (error: any) {
-        console.error("[PAYMENT_PAGE] Error validating payment data:", error);
-        setError(error.message);
-        showToast({
-          type: "error",
-          title: "Payment Error",
-          message: error.message || "Invalid payment data",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    validatePaymentData();
-  }, [searchParams, showToast]);
-
-  // Create payment intent on demand when user submits form
-  const createPaymentIntentOnSubmit = async (): Promise<string> => {
-    try {
-      console.log("[PAYMENT_PAGE] Creating payment intent on form submit...");
-
-      if (!bookingData) {
-        throw new Error("Payment data is incomplete");
-      }
-
-      if (isCartBooking) {
-        const response = await paymentApi.createCartPaymentIntent({
-          amount: bookingData.amount,
-          cartData: bookingData.cartData,
-          contactInfo: bookingData.contactInfo,
-        });
-
-        if (response.success && response.data) {
-          console.log(
-            "[PAYMENT_PAGE] Cart payment intent created on submit:",
-            response.data.paymentIntentId
-          );
-          return response.data.clientSecret;
-        } else {
-          throw new Error(response.error || "Failed to create payment intent");
-        }
-      } else {
-        const response = await paymentApi.createPaymentIntent({
-          amount: bookingData.amount,
-          bookingData,
-        });
-
-        if (response.success && response.data) {
-          console.log(
-            "[PAYMENT_PAGE] Single payment intent created on submit:",
-            response.data.paymentIntentId
-          );
-          return response.data.clientSecret;
-        } else {
-          throw new Error(response.error || "Failed to create payment intent");
-        }
-      }
-    } catch (error: any) {
-      console.error(
-        "[PAYMENT_PAGE] Error creating payment intent on submit:",
-        error
-      );
-      throw error;
+    if (isCart) {
+      // Demo single cart booking: redirect to cart confirmation with one ID
+      router.push(`/booking/cart-confirmation?bookings=${demoId}`);
+    } else {
+      router.push(`/booking/confirmation/${demoId}`);
     }
-  };
-
-  // Handle explicit navigation away (Go Back button)
-  const handleGoBack = async () => {
-    setIsNavigatingAway(true);
-    router.back();
-  };
-
-  const handlePaymentSuccess = async (paymentIntent: any) => {
-    try {
-      setIsNavigatingAway(true);
-
-      console.log(
-        "[PAYMENT_PAGE] Payment successful, confirming...",
-        paymentIntent.id
-      );
-
-      // Confirm payment on server and create booking
-      const response = await paymentApi.confirmPayment({
-        paymentIntentId: paymentIntent.id,
-        bookingData: bookingData,
-      });
-
-      if (response.success && response.data) {
-        console.log(
-          "[PAYMENT_PAGE] Booking created successfully:",
-          response.data.bookingIds
-        );
-
-        showToast({
-          type: "success",
-          title: "Payment Successful!",
-          message: isCartBooking
-            ? `${response.data.totalBookings} bookings created successfully`
-            : "Your booking has been confirmed",
-        });
-
-        // Redirect to confirmation page
-        if (isCartBooking) {
-          router.push(
-            `/booking/cart-confirmation?bookings=${response.data.bookingIds.join(
-              ","
-            )}`
-          );
-        } else {
-          router.push(`/booking/confirmation/${response.data.bookingIds[0]}`);
-        }
-      } else {
-        throw new Error(
-          response.error || "Failed to create booking after payment"
-        );
-      }
-    } catch (error: any) {
-      console.error("[PAYMENT_PAGE] Error after payment success:", error);
-
-      showToast({
-        type: "error",
-        title: "Booking Error",
-        message:
-          "Payment was successful but booking creation failed. Please contact support.",
-      });
-
-      router.push("/contact");
-    }
-  };
-
-  const handlePaymentError = (error: any) => {
-    console.error("[PAYMENT_PAGE] Payment error:", error);
-    showToast({
-      type: "error",
-      title: "Payment Failed",
-      message: error.message || "Payment failed. Please try again.",
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary_green mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading payment data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <svg
-              className="w-16 h-16 mx-auto"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Payment Error
-          </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={handleGoBack}
-            className="px-6 py-3 bg-primary_green text-white rounded-md hover:bg-primary_green/90"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const appearance = {
-    theme: "stripe" as const,
-    variables: {
-      colorPrimary: "#10B981", // primary_green
-    },
-  };
-
-  // Use Elements without client secret - payment intent will be created on submit
-  const options = {
-    mode: "payment" as const,
-    amount: Math.round(bookingData.amount * 100), // Convert to cents
-    currency: "myr",
-    appearance,
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Secure Payment
-            </h1>
-            <div className="flex items-center justify-center space-x-2 text-gray-600">
-              <span>Powered by</span>
-              <Image
-                src="/images/stripe-seeklogo.png"
-                alt="Stripe"
-                width={60}
-                height={20}
-                className="h-5 w-12"
-              />
+    <div className="min-h-screen bg-neutral-50 pt-24 pb-16 px-4">
+      <div className="max-w-5xl mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-8">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-text-secondary">
+            <Link href="/tours" className="hover:text-primary">
+              Home
+            </Link>
+            <span>/</span>
+            <Link href={`/tours/${tour}`} className="hover:text-primary">
+              Tour
+            </Link>
+            <span>/</span>
+            <Link
+              href={`/user-info?tour=${tour}`}
+              className="hover:text-primary"
+            >
+              Guests
+            </Link>
+            <span>/</span>
+            <span className="text-text-primary font-medium">Payment</span>
+          </div>
+
+          <div className="bg-white border border-neutral-200 shadow-soft rounded-2xl p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-text-light mb-2">
+                  Step 3
+                </p>
+                <h1 className="text-2xl font-semibold">Payment</h1>
+                <p className="text-sm text-text-secondary mt-1">
+                  Secure checkout with instant confirmation.
+                </p>
+              </div>
+              <div className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-100 text-xs text-text-secondary">
+                <FiShield className="text-secondary" /> AES-256 encrypted
+              </div>
             </div>
-            <div className="text-3xl font-bold text-primary_green mt-4">
-              RM {bookingData.amount.toFixed(2)}
+
+            <div className="flex gap-2 flex-wrap">
+              {METHODS.map((method) => (
+                <button
+                  key={method}
+                  className={`px-4 py-2 rounded-full border border-neutral-200 text-sm font-semibold transition-colors hover:border-primary ${
+                    method === "Card"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white text-text-secondary"
+                  }`}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
+                Cardholder name
+                <input
+                  type="text"
+                  placeholder="Alex Tan"
+                  className="w-full px-4 py-3 rounded-xl border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
+                />
+              </label>
+              <div className="grid md:grid-cols-2 gap-4">
+                <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
+                  Card number
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-neutral-200 bg-white focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary">
+                    <FiCreditCard className="text-secondary" />
+                    <input
+                      type="text"
+                      placeholder="4242 4242 4242 4242"
+                      className="w-full bg-transparent outline-none"
+                    />
+                  </div>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
+                    Expiry
+                    <input
+                      type="text"
+                      placeholder="MM/YY"
+                      className="w-full px-4 py-3 rounded-xl border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
+                    CVC
+                    <input
+                      type="text"
+                      placeholder="123"
+                      className="w-full px-4 py-3 rounded-xl border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 justify-between pt-2">
+              <Link
+                href={`/user-info?tour=${tour}`}
+                className="inline-flex items-center gap-2 px-4 py-3 rounded-full border border-neutral-200 text-text-secondary hover:border-primary hover:text-primary transition-colors"
+              >
+                <FiArrowLeft /> Back to guest info
+              </Link>
+              <button
+                onClick={handlePay}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors"
+              >
+                Pay RM {total} <FiArrowRight />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <aside className="space-y-4">
+          <div className="bg-white border border-neutral-200 shadow-soft rounded-2xl p-6 space-y-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-text-light">
+              Summary
+            </p>
+            <h3 className="text-lg font-semibold">{SUMMARY.title}</h3>
+            <div className="space-y-2 text-sm text-text-secondary">
+              <div className="flex justify-between">
+                <span>Date</span>
+                <span>{SUMMARY.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Time</span>
+                <span>{SUMMARY.time}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Guests</span>
+                <span>{SUMMARY.guests}</span>
+              </div>
+            </div>
+            <div className="pt-3 border-t border-neutral-200 space-y-2 text-sm text-text-secondary">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>RM {SUMMARY.subtotal}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Fees & taxes</span>
+                <span>RM {SUMMARY.fees}</span>
+              </div>
+            </div>
+            <div className="pt-3 border-t border-neutral-200 flex justify-between items-center">
+              <span className="text-text-secondary text-sm">Total</span>
+              <span className="text-xl font-bold text-primary">RM {total}</span>
             </div>
           </div>
 
-          <Elements options={options} stripe={stripePromise}>
-            <DeferredCheckoutForm
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-              isCartBooking={isCartBooking}
-              createPaymentIntentOnSubmit={createPaymentIntentOnSubmit}
-            />
-          </Elements>
-
-          <button
-            onClick={handleGoBack}
-            className="w-full mt-4 px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
+          <div className="bg-white border border-neutral-200 shadow-soft rounded-2xl p-5 space-y-3 text-sm text-text-secondary">
+            <p className="text-text-primary font-semibold">Secure by default</p>
+            <ul className="space-y-2 list-disc list-inside">
+              <li>Bank-grade encryption</li>
+              <li>Instant confirmation email</li>
+              <li>Refund support within policy</li>
+            </ul>
+          </div>
+        </aside>
       </div>
     </div>
   );

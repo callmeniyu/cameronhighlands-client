@@ -25,11 +25,12 @@ const ALLOWED_PREFIXES = [
   "/blogs",
   "/news",
   "/uploads",
-  "/about",
   "/auth",
   "/profile",
   "/cart",
   "/recommendations",
+  "/user-info",
+  "/confirmation",
 ];
 
 // Additional explicitly allowed exact paths
@@ -102,7 +103,7 @@ export function middleware(req: NextRequest) {
     }
 
     // Allow dynamic routes that might exist
-    if (pathname.match(/^\/[^\/]+\/[^\/]+/)) {
+    if (pathname.match(/^\/[^\/]+\/.*/)) {
       return NextResponse.next();
     }
 

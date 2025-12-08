@@ -249,7 +249,7 @@ export default function CartPage() {
       }
 
       // Navigate to user-info page with cart booking context
-      router.push("/booking/user-info?from=cart");
+      router.push("/user-info?from=cart");
     } catch (error: any) {
       console.error("Error proceeding to booking:", error);
       showToast({

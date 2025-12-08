@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
                 pathname: "/**",
             },
             {
+                protocol: "https",
+                hostname: "images.unsplash.com",
+                pathname: "/**",
+            },
+            {
                 protocol: "http",
                 hostname: "localhost",
                 port: "3001",
@@ -62,65 +67,13 @@ const nextConfig: NextConfig = {
     async redirects() {
         return [
             // Specific redirects for old routes
-            {
-                source: "/rent-scooter-in-cameron-highlands",
-                destination: "/",
-                permanent: true,
-            },
-            {
-                source: "/cameron-highlands-complete-guide",
-                destination: "/",
-                permanent: true,
-            },
-            {
-                source: "/news/self-scooter-tour",
-                destination: "/",
-                permanent: true,
-            },
-            {
-                source: "/news/oastel%C2%A0co-living",
-                destination: "/",
-                permanent: true,
-            },
-            {
-                source: "/news/oastel co-living",
-                destination: "/",
-                permanent: true,
-            },
-            {
-                source: "/updates",
-                destination: "/",
-                permanent: true,
-            },
-            // Redirect to tours page
-            {
-                source: "/book-cameron-highlands-tours",
-                destination: "/tours",
-                permanent: true,
-            },
-            // Redirect old service page to specific tour
-            {
-                source: "/service-page/full-day-land-rover-road-trip-co-tour",
-                destination: "/tours/mossy-forest-highland-discovery",
-                permanent: true,
-            },
-            // Additional legacy service page redirects
-            {
-                source: "/service-page/full-day-coral-hill-private-tour",
-                destination: "/tours/full-day-coral-mossy-forest-hill-private-tour",
-                permanent: true,
-            },
-            {
-                source: "/service-page/half-day-land-rover-road-trip-co-tour",
-                destination: "/tours/half-day-mossy-forest-land-rover-trip",
-                permanent: true,
-            },
+            
             // Tour page redirects (URL updates)
-            {
-                source: "/tours/mossy-forest-highland-discovery",
-                destination: "/tours/mossy-forest-full-day-highland-discovery",
-                permanent: true,
-            },
+            // {
+            //     source: "/tours/mossy-forest-highland-discovery",
+            //     destination: "/tours/mossy-forest-full-day-highland-discovery",
+            //     permanent: true,
+            // },
         ];
     },
     /* config options here */

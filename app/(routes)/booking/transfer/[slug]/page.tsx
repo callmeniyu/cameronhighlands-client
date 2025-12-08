@@ -410,7 +410,7 @@ export default function BookingInfoPage() {
         note: transferDetails.details.note || "",
       },
     });
-    router.push("/booking/user-info");
+    router.push(`/user-info?transfer=${slug}`);
   };
 
   // Calculate total price based on ticket type

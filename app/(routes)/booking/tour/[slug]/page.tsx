@@ -584,7 +584,7 @@ export default function BookingInfoPage() {
       vehicleSeats:
         tourDetails.type === "private" ? vehicleDetails?.seats : undefined,
     });
-    router.push("/booking/user-info");
+    router.push(`/user-info?tour=${slug}`);
   };
 
   // Calculate total price based on tour type

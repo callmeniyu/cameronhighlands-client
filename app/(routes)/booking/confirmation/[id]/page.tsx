@@ -215,7 +215,35 @@ export default function BookingConfirmationPage() {
               element.classList.contains("bg-gradient-to-br") ||
               element.classList.contains("bg-gradient-to-r")
             ) {
-              element.style.backgroundColor = "#059669"; // emerald-600 fallback
+              // Special handling for tick icon background
+              if (
+                element.classList.contains("from-green-500") &&
+                element.classList.contains("to-emerald-600")
+              ) {
+                element.style.backgroundColor = "#059669"; // emerald-600 for tick icon
+                element.style.backgroundImage = "none";
+              } else {
+                element.style.backgroundColor = "#059669"; // emerald-600 fallback
+                element.style.backgroundImage = "none";
+              }
+            }
+
+            // Handle gradient text (bg-clip-text)
+            if (
+              element.classList.contains("bg-clip-text") &&
+              element.classList.contains("text-transparent")
+            ) {
+              element.style.backgroundClip = "unset";
+              element.style.webkitBackgroundClip = "unset";
+              element.style.color = "#059669"; // emerald-600 for gradient text
+              element.style.backgroundImage = "none";
+            }
+
+            // Handle SVG elements to ensure they render properly
+            if (element.tagName.toLowerCase() === "svg") {
+              element.style.color = "#ffffff"; // Ensure SVG icons are white
+              element.style.fill = "currentColor";
+              element.style.stroke = "currentColor";
             }
 
             // Ensure text is readable
@@ -364,6 +392,44 @@ export default function BookingConfirmationPage() {
   useEffect(() => {
     const fetchBooking = async () => {
       try {
+        // Check if this is a demo booking
+        if (bookingId.startsWith("demo-")) {
+          // Create mock booking data for demo purposes
+          const mockBooking: BookingDetails = {
+            _id: bookingId,
+            packageType: "tour",
+            packageId: {
+              _id: "demo-package-id",
+              title: "Mossy Forest Adventure",
+              image: "/images/tour1.jpg",
+              type: "shared",
+              details: {
+                pickupGuidelines:
+                  "Please arrive 15 minutes before your scheduled pickup time. Bring your booking confirmation and valid ID.",
+              },
+            },
+            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0], // 7 days from now
+            time: "7:00 AM",
+            adults: 2,
+            children: 1,
+            pickupLocation: "Tanah Rata Town Center",
+            status: "confirmed",
+            contactInfo: {
+              name: "Demo User",
+              email: "demo@example.com",
+              phone: "+60 12-345 6789",
+            },
+            total: 245,
+            createdAt: new Date().toISOString(),
+            isVehicleBooking: false,
+          };
+          setBooking(mockBooking);
+          setIsLoading(false);
+          return;
+        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${bookingId}`
         );
@@ -444,23 +510,15 @@ export default function BookingConfirmationPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 font-poppins">
-      <div className="bg-white rounded-lg shadow-lg p-8" ref={confirmationRef}>
+      <div
+        className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-2xl p-8 border border-green-100 mt-8"
+        ref={confirmationRef}
+      >
         {/* Header */}
-        <div className="text-center border-b pb-6 mb-6">
-          <h1 className="text-3xl font-bold text-primary_green">
-            Oastel Ticket Information
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Ticket ID: <span className="font-semibold">{booking._id}</span>
-          </p>
-          {/* package name moved into Booking Details section */}
-        </div>
-
-        {/* Confirmation Status */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="text-center border-b-2 border-green-200 pb-6 mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-4 shadow-lg">
             <svg
-              className="w-8 h-8 text-green-600"
+              className="w-10 h-10 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -468,17 +526,55 @@ export default function BookingConfirmationPage() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={3}
                 d="M5 13l4 4L19 7"
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-green-600">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
             Booking Confirmed!
-          </h2>
-          <p className="text-gray-600">
-            Thank you for choosing Oastel. Your booking is confirmed.
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Your adventure awaits in Cameron Highlands
           </p>
+          <p className="text-sm text-gray-500 mt-3">
+            Confirmation ID:{" "}
+            <span className="font-mono font-semibold text-green-700">
+              {booking._id}
+            </span>
+          </p>
+        </div>
+
+        {/* Confirmation Status */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-8 border border-green-200">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-grow">
+              <h2 className="text-2xl font-bold text-green-700 mb-1">
+                Payment Successful
+              </h2>
+              <p className="text-gray-700">
+                Thank you for booking with us. Your reservation is confirmed and
+                ready!
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Booking Details */}
@@ -613,10 +709,16 @@ export default function BookingConfirmationPage() {
       </div>
 
       {/* Email Confirmation (outside PDF) */}
-      <div className="text-center mt-8 text-gray-700">
-        <p>
-          Hi {booking.contactInfo.name},<br />
-          Thank you for choosing Oastel for your booking. <br />
+      <div className="text-center mt-8 text-gray-700 bg-white rounded-xl p-6 shadow-md border border-gray-100">
+        <p className="text-lg">
+          Hi{" "}
+          <span className="font-semibold text-green-700">
+            {booking.contactInfo.name}
+          </span>
+          ,<br />
+          <span className="text-gray-600">
+            Thank you for booking your Cameron Highlands adventure with us!
+          </span>
         </p>
       </div>
 

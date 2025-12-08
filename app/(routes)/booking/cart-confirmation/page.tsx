@@ -282,6 +282,33 @@ export default function CartConfirmationPage() {
       // Fetch details for each booking in parallel, but tolerate partial failures
       const bookingPromises = bookingIds.map(async (id) => {
         try {
+          // Check if this is a demo booking
+          if (id.startsWith("demo-")) {
+            // Return mock booking data for demo purposes
+            return {
+              _id: id,
+              packageTitle: "Mossy Forest Adventure",
+              packageType: "tour",
+              packageImage: "/images/tour1.jpg",
+              selectedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split("T")[0], // 7 days from now
+              selectedTime: "7:00 AM",
+              adults: 2,
+              children: 1,
+              totalPrice: 245,
+              pickupLocation: "Tanah Rata Town Center",
+              contactInfo: {
+                name: "Demo User",
+                email: "demo@example.com",
+                phone: "+60 12-345 6789",
+              },
+              createdAt: new Date().toISOString(),
+              pickupGuidelines:
+                "Please arrive 15 minutes before your scheduled pickup time. Bring your booking confirmation and valid ID.",
+            };
+          }
+
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${id}`
           );

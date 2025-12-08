@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Poppins } from "next/font/google";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import { BookingProvider } from "@/context/BookingContext";
@@ -13,23 +12,26 @@ import {
   generateTwitterCard,
 } from "@/lib/seoUtils";
 
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
-  display: "swap",
-});
+// Use classic CDN import for Poppins to avoid turbopack/internal font handlers
 
 export const metadata: Metadata = {
   title: {
-    default: SITE_CONFIG.title,
-    template: "%s - Oastel",
+    default: "Cameron Highlands Tours - Discover Amazing Tours & Experiences",
+    template: "%s - Cameron Highlands Tours",
   },
-  description: SITE_CONFIG.description,
-  keywords: SITE_CONFIG.keywords.join(", "),
-  authors: [{ name: SITE_CONFIG.author }],
-  creator: SITE_CONFIG.author,
-  publisher: SITE_CONFIG.name,
+  description:
+    "Discover the best Cameron Highlands tours and experiences. Book your perfect adventure with Cameron Highlands Tours - your gateway to unforgettable memories.",
+  keywords: [
+    "Cameron Highlands tours",
+    "Cameron Highlands activities",
+    "Cameron Highlands experiences",
+    "tour booking Cameron Highlands",
+    "Cameron Highlands packages",
+    "Cameron Highlands adventures",
+  ].join(", "),
+  authors: [{ name: "Cameron Highlands Tours" }],
+  creator: "Cameron Highlands Tours",
+  publisher: "Cameron Highlands Tours",
   robots: {
     index: true,
     follow: true,
@@ -41,13 +43,8 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  openGraph: generateOpenGraph(SITE_CONFIG.title, SITE_CONFIG.description),
-  twitter: generateTwitterCard(SITE_CONFIG.title, SITE_CONFIG.description),
   verification: {
-    google: "your-google-verification-code", // Add your Google Search Console verification
-  },
-  alternates: {
-    canonical: SITE_CONFIG.url,
+    google: "your-google-verification-code",
   },
   category: "travel",
   icons: {
@@ -65,6 +62,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin=""
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
         {/* Google tag (gtag.js) */}
         <script
           async
@@ -87,11 +94,11 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "TravelAgency",
-              name: "Oastel",
+              name: "Cameron Highlands Tours",
               description:
-                "Cameron Highlands tours, transfers and adventures including Mossy Forest tours, sunrise tours, and Land Rover rides",
-              url: SITE_CONFIG.url,
-              logo: `${SITE_CONFIG.url}/images/logo.png`,
+                "Discover the best Cameron Highlands tours and experiences with our curated tour packages",
+              url: "https://cameronhighlandstours.com",
+              logo: "https://cameronhighlandstours.com/images/logo.png",
               address: {
                 "@type": "PostalAddress",
                 addressRegion: "Cameron Highlands",
@@ -99,49 +106,15 @@ export default function RootLayout({
               },
               contactPoint: {
                 "@type": "ContactPoint",
-                telephone: "+60196592141",
+                telephone: "+60123456789",
                 contactType: "customer service",
                 availableLanguage: "English",
-              },
-              sameAs: ["https://www.instagram.com/oastelvibe"],
-              hasOfferCatalog: {
-                "@type": "OfferCatalog",
-                name: "Cameron Highlands Tours & Transfers",
-                itemListElement: [
-                  {
-                    "@type": "Offer",
-                    itemOffered: {
-                      "@type": "TourPackage",
-                      name: "Mossy Forest Tours Cameron Highlands",
-                      description:
-                        "Explore the mystical Mossy Forest in Cameron Highlands with our guided tours",
-                    },
-                  },
-                  {
-                    "@type": "Offer",
-                    itemOffered: {
-                      "@type": "TourPackage",
-                      name: "Sunrise Tours Cameron Highlands",
-                      description:
-                        "Experience breathtaking sunrise views with our Cameron Highlands sunrise tours",
-                    },
-                  },
-                  {
-                    "@type": "Offer",
-                    itemOffered: {
-                      "@type": "Service",
-                      name: "Cameron Highlands Transfers",
-                      description:
-                        "Comfortable van transfers across Cameron Highlands and to other destinations",
-                    },
-                  },
-                ],
               },
             }),
           }}
         />
       </head>
-      <body className={`${poppins.variable}`}>
+      <body className={`font-poppins`}>
         <AuthSessionProvider>
           <ToastProvider>
             <CartProvider>

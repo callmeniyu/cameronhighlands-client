@@ -176,10 +176,10 @@ export default function TransferCard({
           <GreenBtn
             text="Book"
             customStyles="font-semibold w-24"
-            action={`/transfers/${slug}`}
+            action={`/user-info?transfer=${slug}`}
             onClick={(ev) => {
               ev?.stopPropagation();
-              router.push(`/transfers/${slug}`);
+              router.push(`/user-info?transfer=${slug}`);
             }}
           />
         </div>

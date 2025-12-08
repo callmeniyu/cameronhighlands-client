@@ -8,100 +8,63 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-primary_green text-white px-4 pt-10 pb-2 md:pr-16">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between gap-10">
-        <div className="text-4xl font-bold my-auto font-poppins w-2/6 flex md:justify-center">
-          <h1>Oastel</h1>
+    <footer className="bg-white border-t border-neutral-200 px-4 pt-10 pb-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="space-y-3">
+          <div className="text-2xl font-bold text-primary leading-tight">
+            Cameron Highlands
+            <div className="text-lg font-medium text-text-secondary">Tours</div>
+          </div>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Calm, well-paced itineraries crafted for modern travelers.
+          </p>
         </div>
+
         <div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-sm md:text-base my-4 justify-center">
-            <div>
-              <h4 className="font-semibold text-gray-300 mb-2">About</h4>
-              <ul className="space-y-1 font-medium">
-                <li>
-                  <Link href="/about#about-us">About us</Link>
-                </li>
-                <li>
-                  <Link href="/about#our-story">Our Story</Link>
-                </li>
-                <li>
-                  <Link href="/about#our-features">Features</Link>
-                </li>
-              </ul>
-            </div>
+          <h4 className="font-semibold text-text-primary mb-3">Explore</h4>
+          <ul className="space-y-2 text-sm text-text-secondary">
+            <li>
+              <a href="/tours">Tours</a>
+            </li>
+            <li>
+              <a href="/blogs">Blogs</a>
+            </li>
+          </ul>
+        </div>
 
-            <div>
-              <h4 className="font-semibold text-gray-300 mb-2">Services</h4>
-              <ul className="space-y-1 font-medium">
-                <li>
-                  <a href="/tours">Tours</a>
-                </li>
-                <li>
-                  <a href="/transfers">Transfers</a>
-                </li>
-                <li>
-                  <a href="https://booking.exely.com/en/oastel/">Stays</a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-300 mb-2">Help</h4>
-              <ul className="space-y-1 font-medium">
-                <li>
-                  <a href="/contact-us">Contact Us</a>
-                </li>
-                <li>
-                  <a href="contact-us#feedback">Feedback</a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-300 mb-2">Others</h4>
-              <ul className="space-y-1 font-medium">
-                <li>
-                  <a href="/privacy-policy">Terms & Conditions</a>
-                </li>
-                <li>
-                  <a href="/blogs">Blogs</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="flex justify-between">
-            <img
-              src="/images/footer_payment1.png"
-              className="w-9 h-8 md:w-11 md:h-10"
-              alt="footer_payment"
-            />
-            <img
-              src="/images/footer_payment2.png"
-              className="w-9 h-8 md:w-11 md:h-10"
-              alt="footer_payment"
-            />
-            <img
-              src="/images/footer_payment3.png"
-              className="w-9 h-8 md:w-11 md:h-10"
-              alt="footer_payment"
-            />
-            <img
-              src="/images/footer_payment4.png"
-              className="w-9 h-8 md:w-11 md:h-10"
-              alt="footer_payment"
-            />
-            <img
-              src="/images/footer_payment5.png"
-              className="w-9 h-8 md:w-11 md:h-10"
-              alt="footer_payment"
-            />
-          </div>
+        <div>
+          <h4 className="font-semibold text-text-primary mb-3">Support</h4>
+          <ul className="space-y-2 text-sm text-text-secondary">
+            <li>
+              <a href="/contact-us">Contact Us</a>
+            </li>
+            <li>
+              <a href="/faqs">FAQs</a>
+            </li>
+            <li>
+              <a href="/privacy-policy">Terms & Conditions</a>
+            </li>
+          </ul>
         </div>
       </div>
 
-      {/* Copyright */}
-      <div className="mt-10 text-center text-xs text-gray-300 font-poppins font-medium">
-        Copyright@2025 Oastel. All Rights Reserved.
+      <div className="max-w-7xl mx-auto mt-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-xs text-text-secondary">
+        <div>© 2025 Cameron Highlands Tours. All rights reserved.</div>
+        <div className="flex items-center gap-3 text-sm">
+          <a
+            href="mailto:hello@cameronhighlandstours.com"
+            className="hover:text-primary transition-colors"
+          >
+            hello@cameronhighlandstours.com
+          </a>
+          <span className="hidden md:inline text-neutral-300">|</span>
+          <a
+            href="tel:+60123456789"
+            className="hover:text-primary transition-colors"
+          >
+            +60 12-345 6789
+          </a>
+        </div>
       </div>
     </footer>
   );

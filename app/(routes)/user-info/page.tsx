@@ -32,6 +32,24 @@ export default function UserInfoPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50 pt-24 pb-16 px-4">
+      <style jsx>{`
+        input:focus,
+        select:focus {
+          outline: none !important;
+          box-shadow: none !important;
+          border-color: #e5e7eb !important;
+          -webkit-box-shadow: none !important;
+          -moz-box-shadow: none !important;
+        }
+        input:focus-visible,
+        select:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+          border-color: #e5e7eb !important;
+          -webkit-box-shadow: none !important;
+          -moz-box-shadow: none !important;
+        }
+      `}</style>
       <div className="max-w-5xl mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-8">
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm text-text-secondary">
@@ -55,45 +73,45 @@ export default function UserInfoPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
                 Full name
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white">
                   <FiUser className="text-secondary" />
                   <input
                     type="text"
                     placeholder="Alex Tan"
-                    className="w-full bg-transparent outline-none text-text-primary"
+                    className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
                   />
                 </div>
               </label>
 
               <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
                 Email
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white">
                   <FiMail className="text-secondary" />
                   <input
                     type="email"
                     placeholder="you@example.com"
-                    className="w-full bg-transparent outline-none text-text-primary"
+                    className="w-full bg-transparent focus:border-none outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
                   />
                 </div>
               </label>
 
               <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
                 Phone number
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white">
                   <FiPhone className="text-secondary" />
                   <input
                     type="tel"
                     placeholder="+60 12-345 6789"
-                    className="w-full bg-transparent outline-none text-text-primary"
+                    className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
                   />
                 </div>
               </label>
 
               <label className="flex flex-col gap-2 text-sm font-medium text-text-primary">
                 Pickup location
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white ">
                   <FiMapPin className="text-secondary" />
-                  <select className="w-full bg-transparent outline-none text-text-primary">
+                  <select className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary">
                     <option>Tanah Rata Town Center</option>
                     <option>Brinchang Bus Terminal</option>
                     <option>Golden Hills Hotel</option>
@@ -104,12 +122,6 @@ export default function UserInfoPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 justify-between pt-2">
-              <Link
-                href={`/tours/${tour}`}
-                className="inline-flex items-center gap-2 px-4 py-3 rounded-full border border-neutral-200 text-text-secondary hover:border-primary hover:text-primary transition-colors"
-              >
-                <FiArrowLeft /> Back to tour
-              </Link>
               <button
                 onClick={handleNext}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors"
@@ -153,7 +165,7 @@ export default function UserInfoPage() {
             <ul className="space-y-2 list-disc list-inside">
               <li>Pickup coordination and emergency contact</li>
               <li>Instant confirmation to your email</li>
-              <li>Guide knows any special requests</li>
+              <li>Guide identifies you</li>
             </ul>
           </div>
         </aside>

@@ -210,33 +210,17 @@ export default function BookingConfirmationPage() {
           try {
             const computedStyle = getComputedStyle(element);
 
-            // For elements with gradient backgrounds, ensure they have fallback colors
-            if (
-              element.classList.contains("bg-gradient-to-br") ||
-              element.classList.contains("bg-gradient-to-r")
-            ) {
-              // Special handling for tick icon background
-              if (
-                element.classList.contains("from-green-500") &&
-                element.classList.contains("to-emerald-600")
-              ) {
-                element.style.backgroundColor = "#059669"; // emerald-600 for tick icon
-                element.style.backgroundImage = "none";
-              } else {
-                element.style.backgroundColor = "#059669"; // emerald-600 fallback
-                element.style.backgroundImage = "none";
-              }
+            // Ensure solid backgrounds render properly
+            if (element.classList.contains("bg-accent")) {
+              element.style.backgroundColor = "#E2A45A";
             }
-
-            // Handle gradient text (bg-clip-text)
-            if (
-              element.classList.contains("bg-clip-text") &&
-              element.classList.contains("text-transparent")
-            ) {
-              element.style.backgroundClip = "unset";
-              element.style.webkitBackgroundClip = "unset";
-              element.style.color = "#059669"; // emerald-600 for gradient text
-              element.style.backgroundImage = "none";
+            
+            if (element.classList.contains("text-accent")) {
+              element.style.color = "#E2A45A";
+            }
+            
+            if (element.classList.contains("text-primary")) {
+              element.style.color = "#0F172A";
             }
 
             // Handle SVG elements to ensure they render properly
@@ -487,7 +471,7 @@ export default function BookingConfirmationPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-primary_green border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -500,7 +484,7 @@ export default function BookingConfirmationPage() {
         </h1>
         <button
           onClick={() => router.push("/")}
-          className="px-6 py-2 bg-primary_green text-white rounded-lg hover:bg-green-700"
+          className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
         >
           Go Home
         </button>
@@ -511,65 +495,67 @@ export default function BookingConfirmationPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 font-poppins">
       <div
-        className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-2xl p-8 border border-green-100 mt-8"
+        className="bg-gradient-to-br from-white to-accent/10 rounded-2xl shadow-2xl p-8 border border-accent/40 mt-8"
         ref={confirmationRef}
       >
         {/* Header */}
-        <div className="text-center border-b-2 border-green-200 pb-6 mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-4 shadow-lg">
-            <svg
-              className="w-10 h-10 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
+        <div className="text-center border-b-2 border-accent pb-6 mb-8">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-accent rounded-full shadow-xl">
+              <svg
+                className="w-12 h-12 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
                 strokeWidth={3}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <h1 className="text-4xl font-bold text-accent">
+              Booking Confirmed!
+            </h1>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-            Booking Confirmed!
-          </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-700 text-lg mt-3">
             Your adventure awaits in Cameron Highlands
           </p>
-          <p className="text-sm text-gray-500 mt-3">
+          <p className="text-sm text-gray-600 mt-2">
             Confirmation ID:{" "}
-            <span className="font-mono font-semibold text-green-700">
+            <span className="font-mono font-bold text-primary">
               {booking._id}
             </span>
           </p>
         </div>
 
         {/* Confirmation Status */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-8 border border-green-200">
+        <div className="bg-accent/15 rounded-xl p-6 mb-8 border-2 border-accent">
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center shadow-lg">
                 <svg
-                  className="w-8 h-8 text-white"
+                  className="w-9 h-9 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  strokeWidth={3}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
               </div>
             </div>
             <div className="flex-grow">
-              <h2 className="text-2xl font-bold text-green-700 mb-1">
+              <h2 className="text-2xl font-bold text-primary mb-1">
                 Payment Successful
               </h2>
-              <p className="text-gray-700">
+              <p className="text-gray-700 font-medium">
                 Thank you for booking with us. Your reservation is confirmed and
                 ready!
               </p>
@@ -578,19 +564,19 @@ export default function BookingConfirmationPage() {
         </div>
 
         {/* Booking Details */}
-        <div className="bg-gray-50 rounded-lg p-6 mb-6">
-          <h3 className="text-xl font-semibold mb-4">Booking Details</h3>
+        <div className="bg-white rounded-lg p-6 mb-6 border border-gray-200">
+          <h3 className="text-xl font-semibold mb-4 text-primary">Booking Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <Calendar className="w-5 h-5 text-primary_green" />
-              <p className="font-semibold">{formatDate(booking.date)}</p>
+            <div className="flex items-start gap-3">
+              <Calendar className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+              <p className="font-semibold text-gray-800">{formatDate(booking.date)}</p>
             </div>
-            <div className="flex items-start gap-2">
-              <Clock className="w-5 h-5 text-primary_green" />
-              <p className="font-semibold">{booking.time}</p>
+            <div className="flex items-start gap-3">
+              <Clock className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+              <p className="font-semibold text-gray-800">{booking.time}</p>
             </div>
-            <div className="flex items-start gap-2">
-              <Users className="w-5 h-5 text-primary_green" />
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
               {booking.isVehicleBooking ||
               booking.packageId?.type === "private" ? (
                 <p className="font-semibold">
@@ -609,9 +595,9 @@ export default function BookingConfirmationPage() {
             </div>
             {/* Package row added here so package name appears inside Booking Details */}
             {booking.packageId && (
-              <div className="flex items-start gap-2">
-                <MapPin className="w-5 h-5 text-primary_green" />
-                <p className="font-semibold">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+                <p className="font-semibold text-gray-800">
                   {booking.packageId.title || booking.packageType}
                 </p>
               </div>
@@ -620,38 +606,38 @@ export default function BookingConfirmationPage() {
         </div>
 
         {/* Contact Information */}
-        <div className="bg-gray-50 rounded-lg p-6 mb-6">
-          <h3 className="text-xl font-semibold mb-4">Contact Information</h3>
+        <div className="bg-white rounded-lg p-6 mb-6 border border-gray-200">
+          <h3 className="text-xl font-semibold mb-4 text-primary">Contact Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <Users className="w-5 h-5 text-primary_green" />
-              <p className="font-semibold">{booking.contactInfo.name}</p>
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+              <p className="font-semibold text-gray-800">{booking.contactInfo.name}</p>
             </div>
-            <div className="flex items-start gap-2">
-              <Mail className="w-5 h-5 text-primary_green" />
-              <p>{booking.contactInfo.email}</p>
+            <div className="flex items-start gap-3">
+              <Mail className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+              <p className="text-gray-800">{booking.contactInfo.email}</p>
             </div>
-            <div className="flex items-start gap-2">
-              <Phone className="w-5 h-5 text-primary_green" />
-              <p>{booking.contactInfo.phone}</p>
+            <div className="flex items-start gap-3">
+              <Phone className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+              <p className="text-gray-800">{booking.contactInfo.phone}</p>
             </div>
-            <div className="flex items-start gap-2">
-              <MapPin className="w-5 h-5 text-primary_green" />
-              <p>{stripHtmlTags(booking.pickupLocation || "")}</p>
+            <div className="flex items-start gap-3">
+              <MapPin className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+              <p className="text-gray-800">{stripHtmlTags(booking.pickupLocation || "")}</p>
             </div>
           </div>
         </div>
 
         {/* Total */}
-        <div className="bg-primary_green/10 rounded-lg p-6 mb-6 flex justify-between items-center">
+        <div className="bg-accent/15 rounded-lg p-6 mb-6 flex justify-between items-center border-2 border-accent">
           <div>
-            <h3 className="text-xl font-semibold">Total Amount</h3>
+            <h3 className="text-xl font-semibold text-primary">Total Amount</h3>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-primary_green">
+            <p className="text-3xl font-bold text-accent">
               RM {booking.total.toFixed(2)}
             </p>
-            <p className="text-xs text-gray-600">Paid online</p>
+            <p className="text-sm text-gray-700 font-medium">Paid online</p>
           </div>
         </div>
 
@@ -691,9 +677,9 @@ export default function BookingConfirmationPage() {
 
         {/* Pickup Guidelines */}
         {booking.packageId?.details?.pickupGuidelines && (
-          <div className="bg-green-50 border-l-4 border-green-400 p-6 mb-6">
+          <div className="bg-accent/10 border-l-4 border-accent/40 p-6 mb-6">
             <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-green-600" />
+              <MapPin className="w-5 h-5 text-accent" />
               Pickup Guidelines:
             </h3>
             <div
@@ -712,7 +698,7 @@ export default function BookingConfirmationPage() {
       <div className="text-center mt-8 text-gray-700 bg-white rounded-xl p-6 shadow-md border border-gray-100">
         <p className="text-lg">
           Hi{" "}
-          <span className="font-semibold text-green-700">
+          <span className="font-semibold text-accent">
             {booking.contactInfo.name}
           </span>
           ,<br />
@@ -736,7 +722,7 @@ export default function BookingConfirmationPage() {
             onClick={() => {
               router.push("/recommendations");
             }}
-            className="px-8 py-3 bg-primary_green text-white rounded-lg hover:bg-primary_green/90 font-poppins"
+            className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark font-poppins"
           >
             Continue
           </button>

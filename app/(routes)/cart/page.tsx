@@ -332,15 +332,15 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <FiShoppingCart className="text-primary_green" />
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+            <FiShoppingCart className="text-primary_green text-2xl sm:text-3xl" />
             Your Cart
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Review your selected items and proceed to booking
           </p>
           {validatingItems && (
@@ -351,10 +351,10 @@ export default function CartPage() {
           )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2">
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* All Items (both valid and invalid) */}
               {allItems.map((item) => {
                 const details = (item.packageDetails || {}) as PackageDetails;
@@ -385,16 +385,16 @@ export default function CartPage() {
                 return (
                   <div
                     key={item._id}
-                    className={`bg-white rounded-xl shadow-sm border ${
+                    className={`bg-white rounded-lg sm:rounded-xl shadow-sm border ${
                       hasError
                         ? "border-red-200 bg-red-50/20"
                         : "border-gray-200"
                     } overflow-hidden`}
                   >
-                    <div className="p-6">
-                      <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="p-4 sm:p-6">
+                      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                         {/* Item Image */}
-                        <div className="lg:w-48 h-40 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="w-full lg:w-48 h-32 sm:h-40 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                           {packageImage ? (
                             <Image
                               src={packageImage}
@@ -448,22 +448,22 @@ export default function CartPage() {
                             </button>
                           </div>
 
-                          <div className="grid lg:grid-cols-2 gap-6">
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-3 text-gray-600">
-                                <FiCalendar className="text-primary_green" />
+                          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="space-y-2 sm:space-y-3">
+                              <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base text-gray-600">
+                                <FiCalendar className="text-primary_green flex-shrink-0" />
                                 <span className="font-medium">
                                   {formatDate(selectedDate)}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-3 text-gray-600">
-                                <FiClock className="text-primary_green" />
+                              <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base text-gray-600">
+                                <FiClock className="text-primary_green flex-shrink-0" />
                                 <span className="font-medium">
                                   {formatTime(selectedTime)}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-3 text-gray-600">
-                                <FiUser className="text-primary_green" />
+                              <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base text-gray-600">
+                                <FiUser className="text-primary_green flex-shrink-0" />
                                 <span className="font-medium">
                                   <span className="text-sm text-gray-400 ml-1">
                                     {adults > 0
@@ -482,11 +482,11 @@ export default function CartPage() {
                               </div>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-2 sm:space-y-3">
                               {item.pickupLocation && (
-                                <div className="flex items-start gap-3 text-gray-600">
+                                <div className="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-600">
                                   <FiMapPin className="text-primary_green mt-0.5 flex-shrink-0" />
-                                  <span className="text-sm leading-relaxed">
+                                  <span className="text-xs sm:text-sm leading-relaxed">
                                     {typeof item.pickupLocation === "string"
                                       ? stripHtmlTags(item.pickupLocation)
                                       : (
@@ -506,9 +506,9 @@ export default function CartPage() {
                                 </div>
                               )}
 
-                              <div className="text-right">
+                              <div className="text-left sm:text-right">
                                 <div
-                                  className={`text-2xl font-bold ${
+                                  className={`text-xl sm:text-2xl font-bold ${
                                     hasError
                                       ? "text-gray-400 line-through"
                                       : "text-primary_green"
@@ -530,23 +530,23 @@ export default function CartPage() {
 
           {/* Booking Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 sticky top-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
                 <FiCreditCard className="text-primary_green" />
                 Booking Summary
               </h3>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-gray-600">
+              <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                <div className="flex justify-between text-sm sm:text-base text-gray-600">
                   <span>Items ({validItems.length})</span>
                   <span>RM {subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-sm sm:text-base text-gray-600">
                   <span>Processing Fee (2.8%)</span>
                   <span>RM {tax.toFixed(2)}</span>
                 </div>
                 <hr className="border-gray-200" />
-                <div className="flex justify-between text-lg font-semibold text-gray-900">
+                <div className="flex justify-between text-base sm:text-lg font-semibold text-gray-900">
                   <span>Total</span>
                   <span className="text-primary_green">
                     RM {total.toFixed(2)}

@@ -42,8 +42,8 @@ export default function ConfirmationPage() {
 
           <div className="bg-white border border-neutral-200 shadow-soft rounded-2xl p-6 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3 text-success">
-                <div className="p-3 rounded-full bg-success/10 text-success">
+              <div className="flex items-center gap-3 text-accent">
+                <div className="p-3 rounded-full bg-accent/10 text-accent">
                   <FiCheckCircle size={22} />
                 </div>
                 <div>

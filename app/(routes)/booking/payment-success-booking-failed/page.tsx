@@ -57,11 +57,11 @@ export default function PaymentSuccessBookingFailedPage() {
           </p>
 
           <div className="space-y-4">
-            <div className="text-left bg-green-50 border border-green-200 rounded-md p-4">
-              <h3 className="font-medium text-green-800 mb-2">
+            <div className="text-left bg-accent/10 border border-accent/40 rounded-md p-4">
+              <h3 className="font-medium text-accent-dark mb-2">
                 ✅ Payment Status
               </h3>
-              <ul className="text-sm text-green-700 space-y-1">
+              <ul className="text-sm text-accent space-y-1">
                 <li>• Your payment was successfully processed</li>
                 <li>• Your card has been charged</li>
                 {paymentId && <li>• Payment ID: {paymentId}</li>}

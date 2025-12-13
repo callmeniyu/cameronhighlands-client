@@ -243,7 +243,7 @@ export default function ToursPage() {
 
   return (
     <div>
-      <div className="relative h-96 md:h-[90vh] pt-16 overflow-hidden">
+      <div className="relative h-72 sm:h-96 md:h-[90vh] pt-16 overflow-hidden">
         {/* Background Image */}
         <Image
           src="/images/tour_main.png"
@@ -255,10 +255,10 @@ export default function ToursPage() {
         {/* Light black overlay */}
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 h-full flex flex-col justify-center items-center text-center text-white px-4">
-          <h1 className="text-3xl md:text-5xl font-semibold sm:font-bold font-poppins">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-semibold sm:font-bold font-poppins">
             Find Your Perfect Tour
           </h1>
-          <p className="mt-3 max-w-xl text-base md:text-lg font-poppins">
+          <p className="mt-2 sm:mt-3 max-w-xl text-sm sm:text-base md:text-lg font-poppins">
             From scenic Land Rover rides to intimate group adventures, discover
             the best of Cameron Highlands through our curated tour packages.
           </p>
@@ -270,7 +270,7 @@ export default function ToursPage() {
         </div>
       </div>
 
-      <div className="flex gap-3 items-center justify-between px-5 mt-8">
+      <div className="flex gap-2 sm:gap-3 items-center justify-between px-4 sm:px-5 mt-6 sm:mt-8">
         <hr className="border-b-2 border-primary_green  w-full hidden md:flex" />
         <SearchInput
           customeStyles=""
@@ -281,7 +281,7 @@ export default function ToursPage() {
         />
 
         {/* Mobile/Desktop filter button */}
-        <div className="sm:hidden flex gap-2 relative">
+        <div className="sm:hidden flex gap-2 relative flex-shrink-0">
           <button
             className="flex items-center gap-1 text-sm bg-primary_green text-white px-3 py-2 rounded-md hover:bg-primary_green/80 transition-colors"
             onClick={() =>
@@ -321,7 +321,7 @@ export default function ToursPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-10 flex flex-col sm:flex-row gap-4 relative">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-10 flex flex-col sm:flex-row gap-4 relative">
         <div className="hidden sm:block sticky-filter">
           <FilterSidebar
             filters={filters}
@@ -333,10 +333,10 @@ export default function ToursPage() {
 
         {isFilterOpen && (
           <div className="fixed inset-0 z-50 bg-black/40 flex justify-center items-center px-4 sm:hidden">
-            <div className="bg-white rounded-lg w-full max-w-sm p-4 relative animate-fadeInUp shadow-lg">
+            <div className="bg-white rounded-lg w-full max-w-sm p-4 relative animate-fadeInUp shadow-lg max-h-[90vh] overflow-y-auto">
               <button
                 onClick={() => setIsFilterOpen(false)}
-                className="absolute top-3 right-3 text-gray-600 hover:text-black"
+                className="absolute top-3 right-3 text-gray-600 hover:text-black z-10"
               >
                 <IoClose size={24} />
               </button>
@@ -357,7 +357,7 @@ export default function ToursPage() {
           </div>
         )}
 
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {isLoading ? (
             <div className="col-span-full flex justify-center items-center py-20">
               <Loader />

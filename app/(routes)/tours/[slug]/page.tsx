@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FiClock,
   FiUsers,
@@ -13,9 +13,14 @@ import {
   FiInfo,
   FiCalendar,
 } from "react-icons/fi";
+import { IoBookmarkOutline } from "react-icons/io5";
+
 import { IoStar, IoLocationSharp, IoTimeOutline } from "react-icons/io5";
 import { MdOutlineDirectionsCar } from "react-icons/md";
 import { BsExclamationCircle } from "react-icons/bs";
+import { DayPicker } from "react-day-picker";
+import { format } from "date-fns";
+import "react-day-picker/style.css";
 
 // Static dummy tour data - same as home page for consistency
 const DUMMY_TOURS: Record<string, any> = {
@@ -209,10 +214,33 @@ export default function TourDetailPage() {
 
   const tour = DUMMY_TOURS[slug];
 
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [selectedTime, setSelectedTime] = useState("");
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        setShowCalendar(false);
+      }
+    };
+
+    if (showCalendar) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCalendar]);
 
   const handleBook = () => {
     router.push(`/user-info?tour=${slug}`);
@@ -298,20 +326,20 @@ export default function TourDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* Left Column - Tour Info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Title & Basic Info */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft">
-              <span className="inline-block px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-lg mb-3">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-soft">
+              <span className="inline-block px-2.5 sm:px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-lg mb-2 sm:mb-3">
                 {tour.category}
               </span>
-              <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-4">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary mb-3 sm:mb-4">
                 {tour.title}
               </h1>
 
-              <div className="flex flex-wrap gap-4 text-text-secondary text-sm">
+              <div className="flex flex-wrap gap-3 sm:gap-4 text-text-secondary text-xs sm:text-sm">
                 <div className="flex items-center gap-2">
                   <FiClock className="text-primary text-lg" />
                   <span>{tour.duration}</span>
@@ -323,60 +351,59 @@ export default function TourDetailPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FiMapPin className="text-primary text-lg" />
-                  <span>Cameron Highlands</span>
+                  <IoBookmarkOutline className="text-primary text-lg font-bold" />
+                  <span>30k+ Booked</span>
                 </div>
               </div>
             </div>
 
             {/* About */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft">
-              <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-                <FiInfo className="text-primary" />
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-soft">
+              <h2 className="text-base sm:text-lg font-bold text-text-primary mb-3 sm:mb-4 flex items-center gap-2">
+                <FiInfo className="text-primary text-lg sm:text-xl" />
                 About This Tour
               </h2>
-              <p className="text-text-secondary leading-relaxed whitespace-pre-line">
+              <p className="text-sm sm:text-base text-text-secondary leading-relaxed whitespace-pre-line">
                 {tour.longDescription}
               </p>
             </div>
 
             {/* What's Included */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft">
-              <h2 className="text-lg font-bold text-text-primary mb-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-soft">
+              <h2 className="text-base sm:text-lg font-bold text-text-primary mb-3 sm:mb-4">
                 What's Included
               </h2>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {tour.includes.map((item: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center mt-0.5">
-                      <FiCheck className="text-accent text-sm" />
+                  <li key={index} className="flex items-start gap-2 sm:gap-3">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-accent/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                      <FiCheck className="text-accent text-xs sm:text-sm" />
                     </div>
-                    <span className="text-text-secondary">{item}</span>
+                    <span className="text-sm sm:text-base text-text-secondary">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
             </div>
 
             {/* Itinerary */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft">
-              <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-                <IoTimeOutline className="text-primary" />
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-soft">
+              <h2 className="text-base sm:text-lg font-bold text-text-primary mb-3 sm:mb-4 flex items-center gap-2">
+                <IoTimeOutline className="text-primary text-lg sm:text-xl" />
                 Itinerary
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {tour.itinerary.map((item: any, index: number) => (
-                  <div key={index} className="flex gap-4">
+                  <div key={index} className="flex gap-3 sm:gap-4">
                     <div className="flex flex-col items-center">
-                      <div className="w-3 h-3 rounded-full bg-primary" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 min-w-[10px] min-h-[10px] sm:min-w-[12px] sm:min-h-[12px] rounded-full bg-primary flex-shrink-0" />
                       {index < tour.itinerary.length - 1 && (
                         <div className="w-0.5 h-full bg-primary/20 mt-1" />
                       )}
                     </div>
-                    <div className="pb-4">
-                      <span className="text-xs font-semibold text-primary">
-                        {item.time}
-                      </span>
-                      <p className="text-text-primary font-medium">
+                    <div className="pb-3 sm:pb-4 flex-1 min-w-0">
+                      <p className="text-sm sm:text-base text-text-primary font-medium">
                         {item.activity}
                       </p>
                     </div>
@@ -386,16 +413,16 @@ export default function TourDetailPage() {
             </div>
 
             {/* Pickup Locations */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft">
-              <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-                <MdOutlineDirectionsCar className="text-primary" />
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-soft">
+              <h2 className="text-base sm:text-lg font-bold text-text-primary mb-3 sm:mb-4 flex items-center gap-2">
+                <MdOutlineDirectionsCar className="text-primary text-lg sm:text-xl" />
                 Pickup Locations
               </h2>
               <div className="flex flex-wrap gap-2">
                 {tour.pickupLocations.map((location: string, index: number) => (
                   <span
                     key={index}
-                    className="px-4 py-2 bg-neutral-100 text-text-secondary text-sm rounded-xl"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-neutral-100 text-text-secondary text-xs sm:text-sm rounded-lg sm:rounded-xl"
                   >
                     {location}
                   </span>
@@ -404,19 +431,19 @@ export default function TourDetailPage() {
             </div>
 
             {/* Important Notes */}
-            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
-              <h2 className="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
-                <BsExclamationCircle className="text-amber-600" />
+            <div className="bg-amber-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-amber-200">
+              <h2 className="text-base sm:text-lg font-bold text-amber-800 mb-3 sm:mb-4 flex items-center gap-2">
+                <BsExclamationCircle className="text-amber-600 text-lg sm:text-xl" />
                 Important Notes
               </h2>
               <ul className="space-y-2">
                 {tour.notes.map((note: string, index: number) => (
                   <li
                     key={index}
-                    className="flex items-start gap-3 text-amber-900"
+                    className="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-amber-900"
                   >
-                    <span className="text-amber-600 mt-1">•</span>
-                    <span>{note}</span>
+                    <span className="text-amber-600 mt-0.5 sm:mt-1">•</span>
+                    <span className="flex-1">{note}</span>
                   </li>
                 ))}
               </ul>
@@ -424,21 +451,23 @@ export default function TourDetailPage() {
           </div>
 
           {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1 mt-6 lg:mt-0">
-            <div className="sticky top-20 bg-white rounded-2xl p-6 shadow-medium border border-neutral-100">
+          <div className="lg:col-span-1 mt-4 sm:mt-6 lg:mt-0">
+            <div className="sticky top-20 bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-medium border border-neutral-100">
               {/* Price */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <div className="flex items-baseline gap-2 mb-1">
                   {tour.originalPrice > tour.price && (
-                    <span className="text-text-light line-through text-lg">
+                    <span className="text-text-light line-through text-base sm:text-lg">
                       RM {tour.originalPrice}
                     </span>
                   )}
-                  <span className="text-3xl font-bold text-primary">
+                  <span className="text-2xl sm:text-3xl font-bold text-primary">
                     RM {tour.price}
                   </span>
                 </div>
-                <span className="text-text-secondary text-sm">per adult</span>
+                <span className="text-text-secondary text-xs sm:text-sm">
+                  per adult
+                </span>
                 <div className="text-text-light text-xs mt-1">
                   Child (3-11 years): RM {tour.childPrice}
                 </div>
@@ -449,17 +478,162 @@ export default function TourDetailPage() {
                 <label className="block text-sm font-semibold text-text-primary mb-2">
                   Select Date
                 </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                />
+                <div className="relative" ref={calendarRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer text-left flex items-center justify-between bg-white hover:border-primary/50 transition-colors"
+                  >
+                    <span
+                      className={
+                        selectedDate ? "text-text-primary" : "text-text-light"
+                      }
+                    >
+                      {selectedDate
+                        ? format(selectedDate, "PPP")
+                        : "Select a date"}
+                    </span>
+                    <FiCalendar className="text-primary" />
+                  </button>
+
+                  {showCalendar && (
+                    <div className="absolute z-50 mt-2 bg-white rounded-2xl shadow-xl border border-neutral-100 p-4">
+                      <style jsx global>{`
+                        .rdp {
+                          --rdp-accent-color: #059669;
+                          --rdp-background-color: #d1fae5;
+                          --rdp-accent-color-dark: #047857;
+                          --rdp-background-color-dark: #a7f3d0;
+                          --rdp-outline: 2px solid var(--rdp-accent-color);
+                          --rdp-outline-selected: 2px solid
+                            var(--rdp-accent-color);
+                          margin: 0;
+                        }
+                        .rdp-months {
+                          justify-content: center;
+                        }
+                        .rdp-month {
+                          width: 100%;
+                        }
+                        .rdp-caption {
+                          display: flex;
+                          justify-content: center;
+                          align-items: center;
+                          padding: 0.5rem 0 1rem 0;
+                          padding-right: 5rem; /* make room for clustered buttons */
+                        }
+                        .rdp-caption_label {
+                          font-size: 1rem;
+                          font-weight: 600;
+                          color: #1f2937;
+                        }
+                        .rdp-nav {
+                          position: absolute;
+                          top: 0.5rem;
+                          right: 0.5rem; /* cluster to the right */
+                          left: auto;
+                          display: flex;
+                          justify-content: flex-end; /* keep them together */
+                          gap: 0.35rem;
+                          align-items: center;
+                          width: auto; /* shrinkwrap the buttons */
+                          z-index: 5;
+                        }
+                        .rdp-button_previous,
+                        .rdp-button_next {
+                          width: 2rem;
+                          height: 2rem;
+                          border-radius: 0.5rem;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          color: #059669;
+                          background: transparent;
+                          border: none;
+                          cursor: pointer;
+                          transition: all 0.2s;
+                        }
+                        .rdp-button_previous:hover,
+                        .rdp-button_next:hover {
+                          background: #d1fae5;
+                        }
+                        .rdp-button_previous svg,
+                        .rdp-button_next svg {
+                          color: #0f172a;
+                          fill: currentColor;
+                          width: 1rem;
+                          height: 1rem;
+                        }
+                        .rdp-button_previous:focus,
+                        .rdp-button_next:focus {
+                          outline: 2px solid #059669;
+                          outline-offset: 2px;
+                        }
+                        .rdp-head_cell {
+                          font-size: 0.75rem;
+                          font-weight: 500;
+                          color: #6b7280;
+                          text-transform: uppercase;
+                          padding: 0.5rem 0;
+                        }
+                        .rdp-day {
+                          width: 2.5rem;
+                          height: 2.5rem;
+                          border-radius: 0.5rem;
+                          font-size: 0.875rem;
+                          transition: all 0.2s;
+                        }
+                        .rdp-day_button {
+                          width: 100%;
+                          height: 100%;
+                          border-radius: 0.5rem;
+                          border: none;
+                          background: transparent;
+                          cursor: pointer;
+                          font-weight: 500;
+                          color: #1f2937;
+                        }
+                        .rdp-day_button:hover:not(
+                            .rdp-day_selected .rdp-day_button
+                          ) {
+                          background: #f3f4f6;
+                        }
+                        .rdp-day_selected .rdp-day_button {
+                          background: #059669;
+                          color: white;
+                          font-weight: 600;
+                        }
+                        .rdp-day_today
+                          .rdp-day_button:not(
+                            .rdp-day_selected .rdp-day_button
+                          ) {
+                          background: #d1fae5;
+                          color: #047857;
+                          font-weight: 600;
+                        }
+                        .rdp-day_disabled .rdp-day_button {
+                          color: #d1d5db;
+                          cursor: not-allowed;
+                        }
+                      `}</style>
+                      <DayPicker
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          setSelectedDate(date);
+                          setShowCalendar(false);
+                        }}
+                        disabled={{ before: new Date() }}
+                        showOutsideDays={false}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Time Selection */}
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-text-primary mb-2">
+                <label className="block text-xs sm:text-sm font-semibold text-text-primary mb-2">
                   Start Time
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -467,7 +641,7 @@ export default function TourDetailPage() {
                     <button
                       key={time}
                       onClick={() => setSelectedTime(time)}
-                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
                         selectedTime === time
                           ? "bg-primary text-white"
                           : "bg-neutral-100 text-text-secondary hover:bg-neutral-200"
@@ -480,26 +654,26 @@ export default function TourDetailPage() {
               </div>
 
               {/* Travelers */}
-              <div className="mb-6 space-y-4">
+              <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-text-primary mb-2">
+                  <label className="block text-xs sm:text-sm font-semibold text-text-primary mb-2">
                     Adults
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <button
                       onClick={() => setAdults(Math.max(1, adults - 1))}
-                      className="w-10 h-10 rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 transition-colors font-medium"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
                     >
                       −
                     </button>
-                    <span className="w-12 text-center font-semibold text-lg">
+                    <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
                       {adults}
                     </span>
                     <button
                       onClick={() =>
                         setAdults(Math.min(tour.maxPeople, adults + 1))
                       }
-                      className="w-10 h-10 rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 transition-colors font-medium"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
                     >
                       +
                     </button>
@@ -507,22 +681,22 @@ export default function TourDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-text-primary mb-2">
+                  <label className="block text-xs sm:text-sm font-semibold text-text-primary mb-2">
                     Children (3-11 years)
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <button
                       onClick={() => setChildren(Math.max(0, children - 1))}
-                      className="w-10 h-10 rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 transition-colors font-medium"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
                     >
                       −
                     </button>
-                    <span className="w-12 text-center font-semibold text-lg">
+                    <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
                       {children}
                     </span>
                     <button
                       onClick={() => setChildren(children + 1)}
-                      className="w-10 h-10 rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 transition-colors font-medium"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
                     >
                       +
                     </button>
@@ -531,9 +705,11 @@ export default function TourDetailPage() {
               </div>
 
               {/* Total */}
-              <div className="flex items-center justify-between py-4 border-t border-neutral-100 mb-4">
-                <span className="text-text-secondary font-medium">Total</span>
-                <span className="text-2xl font-bold text-primary">
+              <div className="flex items-center justify-between py-3 sm:py-4 border-t border-neutral-100 mb-3 sm:mb-4">
+                <span className="text-sm sm:text-base text-text-secondary font-medium">
+                  Total
+                </span>
+                <span className="text-xl sm:text-2xl font-bold text-primary">
                   RM {totalPrice}
                 </span>
               </div>
@@ -541,13 +717,13 @@ export default function TourDetailPage() {
               {/* Book Now Button */}
               <button
                 onClick={handleBook}
-                className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg transition-all active:scale-[0.98]"
+                className="w-full py-3 sm:py-4 text-sm sm:text-base bg-primary text-white font-bold rounded-lg sm:rounded-xl hover:shadow-lg transition-all active:scale-[0.98]"
               >
                 Book Now
               </button>
 
               {/* Contact Info */}
-              <div className="mt-4 text-center text-sm text-text-light">
+              <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-text-light">
                 Questions? Call us at{" "}
                 <a
                   href="tel:+60123456789"
@@ -562,11 +738,11 @@ export default function TourDetailPage() {
       </div>
 
       {/* Related Tours */}
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold text-text-primary mb-6">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
+        <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-4 sm:mb-6">
           You Might Also Like
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {Object.values(DUMMY_TOURS)
             .filter((t: any) => t.slug !== slug)
             .slice(0, 3)
@@ -574,9 +750,9 @@ export default function TourDetailPage() {
               <Link
                 key={relatedTour.id}
                 href={`/tours/${relatedTour.slug}`}
-                className="group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all"
+                className="group bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all"
               >
-                <div className="relative h-40 overflow-hidden">
+                <div className="relative h-36 sm:h-40 overflow-hidden">
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${
                       relatedTour.id === "1"
@@ -589,15 +765,15 @@ export default function TourDetailPage() {
                     }`}
                   />
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-text-primary group-hover:text-primary transition-colors line-clamp-1">
+                <div className="p-3 sm:p-4">
+                  <h3 className="text-sm sm:text-base font-bold text-text-primary group-hover:text-primary transition-colors line-clamp-1">
                     {relatedTour.title}
                   </h3>
-                  <p className="text-sm text-text-secondary line-clamp-1 mb-2">
+                  <p className="text-xs sm:text-sm text-text-secondary line-clamp-1 mb-2">
                     {relatedTour.description}
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-primary">
+                    <span className="text-base sm:text-lg font-bold text-primary">
                       RM {relatedTour.price}
                     </span>
                     <span className="text-xs text-text-light">
@@ -607,6 +783,228 @@ export default function TourDetailPage() {
                 </div>
               </Link>
             ))}
+        </div>
+      </div>
+
+      {/* Reviews & Comments Section - Isolated Container */}
+      <div className="max-w-6xl mx-auto px-4 pb-12">
+        <div className="bg-gradient-to-br from-gray-50 to-neutral-100 rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 shadow-lg border border-neutral-200">
+          {/* Section Header */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-1 h-6 sm:h-8 bg-primary rounded-full"></div>
+              <h2 className="text-xl sm:text-2xl font-bold text-text-primary">
+                Reviews & Comments
+              </h2>
+            </div>
+            <p className="text-sm sm:text-base text-text-secondary ml-4 sm:ml-7">
+              Share your experience and help others discover this tour
+            </p>
+          </div>
+
+          {/* Add Review Form */}
+          <div className="bg-white rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-md border border-neutral-100 mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 mb-3 sm:mb-4">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <IoStar className="text-primary text-sm sm:text-base" />
+              </div>
+              <h3 className="text-sm sm:text-base font-semibold text-text-primary">
+                Share your experience
+              </h3>
+            </div>
+            <div className="flex gap-3 sm:gap-4">
+              <Image
+                src="https://ui-avatars.com/api/?name=Current+User&background=059669&color=fff"
+                alt="Your profile"
+                width={48}
+                height={48}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <textarea
+                  placeholder="Write your review here..."
+                  rows={3}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none bg-gray-50 focus:bg-white transition-colors"
+                />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs sm:text-sm font-medium text-text-secondary">
+                      Your Rating:
+                    </span>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedRating(i + 1)}
+                          className="transition-all transform hover:scale-110 active:scale-95"
+                        >
+                          <IoStar
+                            className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                              i < selectedRating
+                                ? "text-amber-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    {selectedRating > 0 && (
+                      <span className="text-xs text-text-light">
+                        ({selectedRating}/5)
+                      </span>
+                    )}
+                  </div>
+                  <button className="w-full sm:w-auto px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-full font-semibold hover:bg-primary-dark transition-all shadow-md hover:shadow-lg active:scale-95">
+                    Post Review
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Reviews Count & Filter */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+            <p className="text-xs sm:text-sm font-medium text-text-secondary">
+              <span className="text-primary font-semibold text-base sm:text-lg">
+                {tour.reviewCount}
+              </span>{" "}
+              reviews
+            </p>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs sm:text-sm text-text-light whitespace-nowrap">
+                Sort by:
+              </span>
+              <select className="text-xs sm:text-sm border border-neutral-200 rounded-lg px-2 sm:px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1 sm:flex-none">
+                <option>Most Recent</option>
+                <option>Highest Rated</option>
+                <option>Lowest Rated</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Existing Reviews */}
+          <div className="space-y-3 sm:space-y-4">
+            {/* Review 1 */}
+            <div className="bg-white rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow">
+              <div className="flex gap-3 sm:gap-4">
+                <Image
+                  src="https://ui-avatars.com/api/?name=Sarah+Kim&background=3B82F6&color=fff"
+                  alt="Sarah Kim"
+                  width={48}
+                  height={48}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <h4 className="text-sm sm:text-base font-semibold text-text-primary truncate">
+                        Sarah Kim
+                      </h4>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <IoStar
+                              key={i}
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400"
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-text-light whitespace-nowrap">
+                          2 days ago
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                    Absolutely stunning experience! The Mossy Forest was like
+                    stepping into a fairy tale. Our guide was knowledgeable and
+                    friendly. Highly recommend this tour!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Review 2 */}
+            <div className="bg-white rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow">
+              <div className="flex gap-3 sm:gap-4">
+                <Image
+                  src="https://ui-avatars.com/api/?name=James+Lee&background=8B5CF6&color=fff"
+                  alt="James Lee"
+                  width={48}
+                  height={48}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <h4 className="text-sm sm:text-base font-semibold text-text-primary truncate">
+                        James Lee
+                      </h4>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <IoStar
+                              key={i}
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400"
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-text-light whitespace-nowrap">
+                          5 days ago
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                    Perfect family trip! The kids loved picking strawberries and
+                    the tea plantation visit was educational. Great value for
+                    money and wonderful memories made.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Review 3 */}
+            <div className="bg-white rounded-xl md:rounded-2xl p-4 sm:p-6 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow">
+              <div className="flex gap-3 sm:gap-4">
+                <Image
+                  src="https://ui-avatars.com/api/?name=Aisha+Rahman&background=EC4899&color=fff"
+                  alt="Aisha Rahman"
+                  width={48}
+                  height={48}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <h4 className="text-sm sm:text-base font-semibold text-text-primary truncate">
+                        Aisha Rahman
+                      </h4>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          {[...Array(4)].map((_, i) => (
+                            <IoStar
+                              key={i}
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400"
+                            />
+                          ))}
+                          <IoStar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300" />
+                        </div>
+                        <span className="text-xs text-text-light whitespace-nowrap">
+                          1 week ago
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                    Beautiful scenery and well-organized tour. The sunrise view
+                    was breathtaking. Only minor issue was the early morning
+                    start, but totally worth it!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

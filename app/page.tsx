@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FiMapPin, FiClock, FiUsers } from "react-icons/fi";
+import { IoBookmarkOutline } from "react-icons/io5";
 import { IoStar } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCoverflow, Autoplay, Pagination } from "swiper/modules";
@@ -11,6 +12,7 @@ import { EffectCoverflow, Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
+import ModernTourCardHome from "@/components/ui/ModernTourCardHome";
 
 // Custom styles for the carousel
 const carouselStyles = `
@@ -105,7 +107,6 @@ const DUMMY_TOURS = [
     originalPrice: 70,
     rating: 4.6,
     reviewCount: 189,
-    label: null,
     category: "Family",
   },
 ];
@@ -129,21 +130,21 @@ export default function Home() {
       <style dangerouslySetInnerHTML={{ __html: carouselStyles }} />
 
       {/* Hero */}
-      <header className="max-w-6xl mx-auto px-4 pt-20 pb-14 md:pb-16">
-        <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
-          <div className="space-y-4">
+      <header className="hidden md:block max-w-6xl mx-auto px-4 pt-16 pb-12 md:pt-20 md:pb-16">
+        <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-8 md:gap-10 items-center">
+          <div className="space-y-4 md:space-y-6 text-center md:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-light text-secondary text-xs font-semibold">
               <FiMapPin className="text-secondary" />
               Cameron Highlands, Malaysia
             </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
               Quietly elevated journeys across the Highlands.
             </h1>
-            <p className="text-text-secondary text-base md:text-lg leading-relaxed max-w-2xl">
+            <p className="text-text-secondary text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto md:mx-0">
               Four curated tours, balanced pacing, and tasteful stays—designed
               for travelers who value calm, thoughtful details.
             </p>
-            <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
+            <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-text-secondary justify-center md:justify-start">
               {[
                 "Trusted local guides",
                 "Flexible pickups",
@@ -159,7 +160,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative hidden md:block">
             <div className="h-80">
               <Swiper
                 effect="coverflow"
@@ -222,17 +223,37 @@ export default function Home() {
                                 <IoStar className="w-4 h-4 text-yellow-400" />
                                 <span>{tour.rating}</span>
                               </div>
+                              <span className="inline-block w-1 h-1 rounded-full bg-white/70" />
+                              <span>10k+ booked</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1">
-                                <span className="text-lg font-bold">
-                                  RM {tour.price}
-                                </span>
-                                {tour.originalPrice && (
-                                  <span className="text-sm text-white/70 line-through">
-                                    RM {tour.originalPrice}
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg font-bold">
+                                    RM {tour.price}
                                   </span>
-                                )}
+                                  {tour.originalPrice &&
+                                    tour.originalPrice > tour.price && (
+                                      <>
+                                        <span className="text-sm text-white/70 line-through">
+                                          RM {tour.originalPrice}
+                                        </span>
+                                        <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-semibold">
+                                          {Math.round(
+                                            (1 -
+                                              tour.price / tour.originalPrice) *
+                                              100
+                                          )}
+                                          % OFF
+                                        </span>
+                                      </>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-white/70">
+                                  <span>${(tour.price * 0.22).toFixed(0)}</span>
+                                  <span>•</span>
+                                  <span>€{(tour.price * 0.21).toFixed(0)}</span>
+                                </div>
                               </div>
                               <span className="text-xs text-white/80">
                                 ({tour.reviewCount} reviews)
@@ -273,90 +294,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {DUMMY_TOURS.map((tour, index) => (
-            <Link
-              key={tour.id}
-              href={`/tours/${tour.slug}`}
-              className="group block h-full"
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <article className="h-full rounded-3xl bg-white border border-neutral-200 shadow-soft hover:shadow-strong transition-all duration-300 overflow-hidden flex flex-col">
-                <div className="relative h-56 overflow-hidden">
-                  <Image
-                    src={tour.image}
-                    alt={tour.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-
-                  {tour.label && (
-                    <span
-                      className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm ${getLabelStyles(
-                        tour.label
-                      )}`}
-                    >
-                      {tour.label}
-                    </span>
-                  )}
-
-                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 text-xs font-semibold text-text-primary shadow-sm">
-                    <IoStar className="text-amber-400" />
-                    {tour.rating} ({tour.reviewCount})
-                  </div>
-                </div>
-
-                <div className="p-5 flex flex-col gap-4 flex-1">
-                  <div className="flex items-center gap-2 text-xs text-text-secondary">
-                    <span className="px-3 py-1 rounded-full bg-secondary-light text-secondary-dark font-semibold">
-                      {tour.category}
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-neutral-100 text-text-secondary">
-                      {tour.duration}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold leading-tight group-hover:text-primary transition-colors">
-                      {tour.title}
-                    </h3>
-                    <p className="text-sm text-text-secondary leading-relaxed line-clamp-2">
-                      {tour.description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm text-text-secondary">
-                    <div className="flex items-center gap-2">
-                      <FiClock className="text-secondary" />
-                      {tour.duration}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FiUsers className="text-secondary" />
-                      Small groups
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
-                    <div className="flex items-baseline gap-2">
-                      {tour.originalPrice > tour.price && (
-                        <span className="text-xs text-text-light line-through">
-                          RM {tour.originalPrice}
-                        </span>
-                      )}
-                      <span className="text-2xl font-bold text-primary">
-                        RM {tour.price}
-                      </span>
-                      <span className="text-text-secondary text-xs">
-                        /person
-                      </span>
-                    </div>
-                    <button className="px-4 py-2 text-sm font-semibold rounded-full border border-neutral-300 bg-white hover:border-primary hover:text-primary transition-colors">
-                      View details
-                    </button>
-                  </div>
-                </div>
-              </article>
-            </Link>
+            <ModernTourCardHome key={tour.id} {...tour} />
           ))}
         </div>
       </section>

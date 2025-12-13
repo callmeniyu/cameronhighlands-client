@@ -450,7 +450,7 @@ export default function CartConfirmationPage() {
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                 <svg
-                  className="w-8 h-8 text-green-600"
+                  className="w-8 h-8 text-accent"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -573,13 +573,13 @@ export default function CartConfirmationPage() {
 
                       {/* Pickup Guidelines */}
                       {booking.pickupGuidelines && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                          <h5 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                        <div className="bg-accent/10 border border-accent/40 rounded-lg p-4 mt-4">
+                          <h5 className="font-semibold text-accent-dark mb-2 flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
                             Pickup Guidelines:
                           </h5>
                           <div
-                            className="text-green-700 text-sm leading-relaxed"
+                            className="text-accent text-sm leading-relaxed"
                             dangerouslySetInnerHTML={{
                               __html: booking.pickupGuidelines,
                             }}

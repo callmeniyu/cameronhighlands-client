@@ -74,11 +74,6 @@ export default function ModernTourCardHome({
               {label}
             </span>
           )}
-
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 text-xs font-semibold text-text-primary shadow-sm">
-            <IoStar className="text-amber-400" />
-            {rating} ({reviewCount})
-          </div>
         </div>
 
         <div className="p-5 flex flex-col gap-4 flex-1">
@@ -105,7 +100,7 @@ export default function ModernTourCardHome({
               <FiClock className="text-secondary" />
               {duration}
             </div>
-            <span className="text-xs font-semibold text-green-600">
+            <span className="text-xs font-semibold text-gray-800">
               10k+ booked
             </span>
           </div>
@@ -131,14 +126,20 @@ export default function ModernTourCardHome({
                 <span className="text-text-secondary text-xs">/person</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-text-secondary">
-                <span>${(price * 0.22).toFixed(0)}</span>
+                <span>${Math.round(price * 0.22)}</span>
                 <span>•</span>
-                <span>€{(price * 0.21).toFixed(0)}</span>
+                <span>€{Math.round(price * 0.21)}</span>
               </div>
             </div>
-            <button className="px-4 py-2 text-sm font-semibold rounded-full border border-neutral-300 bg-white hover:border-primary hover:text-primary transition-colors">
-              View details
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-text-primary">
+                <IoStar className="text-amber-400" />
+                {rating} ({reviewCount})
+              </div>
+              <button className="px-4 py-2 text-sm font-semibold rounded-full border border-neutral-300 bg-white hover:border-primary hover:text-primary transition-colors">
+                Book Now
+              </button>
+            </div>
           </div>
         </div>
       </article>

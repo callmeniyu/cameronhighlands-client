@@ -7,6 +7,9 @@ import { IoBookmarkOutline } from "react-icons/io5";
 import { IoStar } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCoverflow, Autoplay, Pagination } from "swiper/modules";
+import { useState, useEffect } from "react";
+import { tourApi } from "@/lib/tourApi";
+import { TourType } from "@/lib/types";
 
 // Import Swiper styles
 import "swiper/css";
@@ -48,83 +51,42 @@ const carouselStyles = `
   }
 `;
 
-// Static dummy tour data (UI-first; no backend dependency)
-const DUMMY_TOURS = [
-  {
-    id: "1",
-    slug: "mossy-forest-adventure",
-    title: "Mossy Forest Adventure",
-    description:
-      "Explore the mystical Mossy Forest with its unique cloud forest ecosystem. Experience the ethereal beauty of moss-covered trees and rare flora.",
-    image: "/images/tour1.jpg",
-    duration: "4 Hours",
-    price: 85,
-    originalPrice: 120,
-    rating: 4.9,
-    reviewCount: 328,
-    label: "Best Seller",
-    category: "Nature",
-  },
-  {
-    id: "2",
-    slug: "sunrise-viewpoint-tour",
-    title: "Sunrise Viewpoint Tour",
-    description:
-      "Witness breathtaking sunrise views from the highest viewpoints in Cameron Highlands. A magical early morning experience you won't forget.",
-    image: "/images/tour2.jpg",
-    duration: "3 Hours",
-    price: 65,
-    originalPrice: 90,
-    rating: 4.8,
-    reviewCount: 256,
-    label: "Popular",
-    category: "Scenic",
-  },
-  {
-    id: "3",
-    slug: "tea-plantation-tour",
-    title: "BOH Tea Plantation Tour",
-    description:
-      "Visit the famous BOH tea plantations, learn about tea processing, and enjoy fresh tea with stunning valley views.",
-    image: "/images/tour3.jpg",
-    duration: "5 Hours",
-    price: 75,
-    originalPrice: 95,
-    rating: 4.7,
-    reviewCount: 412,
-    label: "Recommended",
-    category: "Cultural",
-  },
-  {
-    id: "4",
-    slug: "strawberry-farm-experience",
-    title: "Strawberry Farm Experience",
-    description:
-      "Pick fresh strawberries, taste local strawberry products, and explore beautiful flower gardens in this family-friendly tour.",
-    image: "/images/tour4.jpg",
-    duration: "3 Hours",
-    price: 55,
-    originalPrice: 70,
-    rating: 4.6,
-    reviewCount: 189,
-    category: "Family",
-  },
-];
-
 const getLabelStyles = (label: string) => {
   switch (label) {
-    case "Best Seller":
+    case "Best seller":
       return "bg-accent text-primary";
     case "Popular":
       return "bg-secondary-light text-secondary-dark";
     case "Recommended":
       return "bg-primary text-white";
+    case "Best Value":
+      return "bg-blue-100 text-blue-700";
     default:
       return "bg-neutral-200 text-text-secondary";
   }
 };
 
 export default function Home() {
+  const [tours, setTours] = useState<TourType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTours = async () => {
+      try {
+        setIsLoading(true);
+        const response = await tourApi.getTours({ limit: 10 });
+        if (response.success) {
+          setTours(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching tours:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTours();
+  }, []);
   return (
     <div className="min-h-screen bg-neutral-50 text-text-primary">
       <style dangerouslySetInnerHTML={{ __html: carouselStyles }} />
@@ -185,8 +147,8 @@ export default function Home() {
                 modules={[EffectCoverflow, Autoplay, Pagination]}
                 className="h-full"
               >
-                {DUMMY_TOURS.slice(0, 4).map((tour, index) => (
-                  <SwiperSlide key={tour.id} className="w-72 max-w-sm">
+                {tours.slice(0, 4).map((tour, index) => (
+                  <SwiperSlide key={tour._id} className="w-72 max-w-sm">
                     <Link href={`/tours/${tour.slug}`} className="block h-full">
                       <div className="h-full rounded-3xl overflow-hidden bg-white border border-neutral-200 shadow-soft hover:shadow-strong transition-all duration-300">
                         <div className="relative h-48">
@@ -221,27 +183,32 @@ export default function Home() {
                               <span className="inline-block w-1 h-1 rounded-full bg-white/70" />
                               <div className="flex items-center gap-1">
                                 <IoStar className="w-4 h-4 text-yellow-400" />
-                                <span>{tour.rating}</span>
+                                <span>4.8</span>
                               </div>
                               <span className="inline-block w-1 h-1 rounded-full bg-white/70" />
-                              <span>10k+ booked</span>
+                              <span>
+                                {typeof tour.bookedCount === "number"
+                                  ? tour.bookedCount
+                                  : 0}
+                                + booked
+                              </span>
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg font-bold">
-                                    RM {tour.price}
+                                    RM {tour.newPrice}
                                   </span>
-                                  {tour.originalPrice &&
-                                    tour.originalPrice > tour.price && (
+                                  {tour.oldPrice &&
+                                    tour.oldPrice > tour.newPrice && (
                                       <>
                                         <span className="text-sm text-white/70 line-through">
-                                          RM {tour.originalPrice}
+                                          RM {tour.oldPrice}
                                         </span>
                                         <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-semibold">
                                           {Math.round(
                                             (1 -
-                                              tour.price / tour.originalPrice) *
+                                              tour.newPrice / tour.oldPrice) *
                                               100
                                           )}
                                           % OFF
@@ -249,14 +216,22 @@ export default function Home() {
                                       </>
                                     )}
                                 </div>
+                                <div className="text-xs text-white/70">
+                                  ${Math.round(tour.newPrice * 0.22)} / €
+                                  {Math.round(tour.newPrice * 0.21)}
+                                </div>
                                 <div className="flex items-center gap-2 text-xs text-white/70">
-                                  <span>${(tour.price * 0.22).toFixed(0)}</span>
+                                  <span>
+                                    ${(tour.newPrice * 0.22).toFixed(0)}
+                                  </span>
                                   <span>•</span>
-                                  <span>€{(tour.price * 0.21).toFixed(0)}</span>
+                                  <span>
+                                    €{(tour.newPrice * 0.21).toFixed(0)}
+                                  </span>
                                 </div>
                               </div>
                               <span className="text-xs text-white/80">
-                                ({tour.reviewCount} reviews)
+                                (120+ reviews)
                               </span>
                             </div>
                           </div>
@@ -268,7 +243,7 @@ export default function Home() {
                           </p>
                           <div className="flex items-center justify-between text-xs text-text-secondary">
                             <span className="px-2 py-1 bg-neutral-100 rounded-full">
-                              {tour.category}
+                              {tour.type}
                             </span>
                             <span>Book now</span>
                           </div>
@@ -288,15 +263,43 @@ export default function Home() {
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-bold">Featured tours</h2>
           <p className="text-text-secondary text-sm">
-            {DUMMY_TOURS.length} departures ready to book.
+            {isLoading
+              ? "Loading tours..."
+              : `${tours.length} departures ready to book.`}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {DUMMY_TOURS.map((tour, index) => (
-            <ModernTourCardHome key={tour.id} {...tour} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="animate-pulse">
+                <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {tours.map((tour) => (
+              <ModernTourCardHome
+                key={tour._id}
+                id={tour._id}
+                slug={tour.slug}
+                title={tour.title}
+                description={tour.description}
+                image={tour.image}
+                duration={tour.duration}
+                price={tour.newPrice}
+                originalPrice={tour.oldPrice}
+                rating={4.8}
+                reviewCount={120}
+                label={tour.label || undefined}
+                category={tour.type}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* CTA */}
@@ -314,12 +317,6 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3 text-sm font-semibold">
-            <a
-              href="tel:+60123456789"
-              className="px-4 py-2 rounded-full border border-neutral-300 hover:border-primary hover:text-primary transition-colors"
-            >
-              📞 +60 12-345 6789
-            </a>
             <a
               href="mailto:hello@cameronhighlandstours.com"
               className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors"

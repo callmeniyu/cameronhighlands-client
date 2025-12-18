@@ -185,6 +185,9 @@ export default function ModernTourCard({
                 /person
               </span>
             </div>
+            <div className="text-xs text-text-light mt-0.5">
+              ${Math.round(newPrice * 0.22)} / €{Math.round(newPrice * 0.21)}
+            </div>
           </div>
 
           {/* Book Now Button */}

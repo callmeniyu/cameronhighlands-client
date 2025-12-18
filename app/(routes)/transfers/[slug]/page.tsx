@@ -210,7 +210,11 @@ export default async function TransferDetailPage({
                   {transferDetails.type === "Private" ? "/vehicle" : "/person"}
                 </span>
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="text-sm text-gray-600 mt-1">
+                ${Math.round(transferDetails.newPrice * 0.22)} / €
+                {Math.round(transferDetails.newPrice * 0.21)}
+              </div>
+              <div className="flex items-center gap-2 mt-2">
                 <FaBookmark className="text-primary_green inline-block mr-1" />
                 <span className="font-semibold">
                   {transferDetails.bookedCount} Booked
@@ -380,6 +384,10 @@ export default async function TransferDetailPage({
                   {transferDetails.type === "Private" ? "/vehicle" : "/person"}
                 </span>
               </h2>
+              <div className="text-sm text-gray-600 mb-2">
+                ${Math.round(transferDetails.newPrice * 0.22)} / €
+                {Math.round(transferDetails.newPrice * 0.21)}
+              </div>
               <div className="flex items-center gap-2 mb-2">
                 <FaBookmark className="text-primary_green inline-block mr-1" />
                 <span className="font-semibold text-desc_gray">

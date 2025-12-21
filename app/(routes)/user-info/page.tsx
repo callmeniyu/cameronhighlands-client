@@ -9,26 +9,64 @@ import {
   FiPhone,
   FiMapPin,
   FiArrowRight,
-  FiArrowLeft,
   FiTag,
 } from "react-icons/fi";
-
-const SUMMARY = {
-  title: "Mossy Forest Adventure",
-  date: "12 Jan 2025",
-  time: "7:00 AM",
-  guests: "2 adults, 1 child",
-  price: "RM 235",
-};
+import { useBooking } from "@/context/BookingContext";
+import { format } from "date-fns";
+import { useToast } from "@/context/ToastContext";
 
 export default function UserInfoPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const tour = params.get("tour") || "mossy-forest-adventure";
+  const { booking } = useBooking();
+  const { showToast } = useToast();
+  
   const [couponApplied, setCouponApplied] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Form State
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [pickupLocation, setPickupLocation] = useState("");
 
-  const priceNum = parseInt(SUMMARY.price.replace("RM ", ""));
+  const [pickupOptions, setPickupOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!booking) {
+      // If no booking data, redirect back to tours or home
+      // router.push("/tours"); 
+      // Commented out to prevent infinite redirect loop during development if context is lost
+      // In production, you might want to redirect
+    }
+
+    if (booking?.pickupLocations) {
+      const locations = booking.pickupLocations.split(",").map(s => s.trim()).filter(Boolean);
+      setPickupOptions(locations);
+      if (locations.length > 0) {
+        setPickupLocation(locations[0]);
+      }
+    }
+  }, [booking, router]);
+
+  if (!booking) {
+    return (
+       <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-text-secondary mb-4">No booking details found.</p>
+          <Link
+            href="/tours"
+            className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors"
+          >
+            Browse Tours
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const priceNum = booking.totalPrice ? booking.totalPrice : 0;
+  // Coupon Logic
   const availableCoupon = priceNum >= 200 ? 10 : priceNum >= 100 ? 5 : 0;
   const discount = couponApplied ? (priceNum * availableCoupon) / 100 : 0;
   const finalPrice = priceNum - discount;
@@ -40,10 +78,48 @@ export default function UserInfoPage() {
   };
 
   const handleNext = () => {
-    // Generate demo booking ID and navigate directly to confirmation
-    const demoId = `demo-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    router.push(`/booking/confirmation/${demoId}`);
+    // Validation
+    if (!fullName || !email || !phone) {
+      showToast({
+        type: "error",
+        title: "Missing Information",
+        message: "Please fill in all required fields.",
+      });
+      return;
+    }
+
+    if (!pickupLocation && pickupOptions.length > 0) {
+       showToast({
+        type: "error",
+        title: "Missing Pickup Location",
+        message: "Please select a pickup location.",
+      });
+      return;
+    }
+
+    // Construct Booking Data
+    // We need to match what PaymentController expects
+    const bookingData = {
+      ...booking,
+      subtotal: priceNum,// The base price before discount
+      total: finalPrice, // Ensure final price is set as total
+      contactInfo: {
+        name: fullName,
+        email: email,
+        phone: phone,
+      },
+      pickupLocation: pickupLocation,
+      // Ensure date/time/package info is preserved from context
+    };
+
+    const encodedBookingData = encodeURIComponent(JSON.stringify(bookingData));
+    
+    // Pass final amount (after discount)
+    router.push(`/payment?bookingData=${encodedBookingData}&amount=${finalPrice}`);
   };
+
+  // Format Date for Display
+  const displayDate = booking.date ? format(new Date(booking.date), "d MMM yyyy") : "";
 
   return (
     <div className="min-h-screen bg-neutral-50 pt-24 pb-16 px-4">
@@ -105,6 +181,8 @@ export default function UserInfoPage() {
                   <FiUser className="text-secondary" />
                   <input
                     type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     placeholder="Alex Tan"
                     className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
                   />
@@ -117,6 +195,8 @@ export default function UserInfoPage() {
                   <FiMail className="text-secondary" />
                   <input
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     className="w-full bg-transparent focus:border-none outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
                   />
@@ -129,6 +209,8 @@ export default function UserInfoPage() {
                   <FiPhone className="text-secondary" />
                   <input
                     type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="+60 12-345 6789"
                     className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
                   />
@@ -139,12 +221,25 @@ export default function UserInfoPage() {
                 Pickup location
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-neutral-200 bg-white ">
                   <FiMapPin className="text-secondary" />
-                  <select className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary">
-                    <option>Tanah Rata Town Center</option>
-                    <option>Brinchang Bus Terminal</option>
-                    <option>Golden Hills Hotel</option>
-                    <option>Century Pines Resort</option>
-                  </select>
+                  {pickupOptions.length > 0 ? (
+                    <select 
+                      value={pickupLocation}
+                      onChange={(e) => setPickupLocation(e.target.value)}
+                      className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
+                    >
+                      {pickupOptions.map((opt, i) => (
+                        <option key={i} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                        type="text"
+                        value={pickupLocation}
+                        onChange={(e) => setPickupLocation(e.target.value)}
+                        placeholder="Enter hotel name or location"
+                        className="w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary"
+                    />
+                  )}
                 </div>
               </label>
             </div>
@@ -153,6 +248,7 @@ export default function UserInfoPage() {
               <button
                 onClick={handleNext}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors"
+                disabled={!booking}
               >
                 Continue to payment <FiArrowRight />
               </button>
@@ -165,19 +261,22 @@ export default function UserInfoPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-text-light">
               Summary
             </p>
-            <h3 className="text-lg font-semibold">{SUMMARY.title}</h3>
+            <h3 className="text-lg font-semibold">{booking.title}</h3>
             <div className="space-y-2 text-sm text-text-secondary">
               <div className="flex justify-between">
                 <span>Date</span>
-                <span>{SUMMARY.date}</span>
+                <span>{displayDate}</span>
               </div>
               <div className="flex justify-between">
                 <span>Time</span>
-                <span>{SUMMARY.time}</span>
+                <span>{booking.time}</span>
               </div>
               <div className="flex justify-between">
                 <span>Guests</span>
-                <span>{SUMMARY.guests}</span>
+                <span>
+                  {booking.adults > 0 ? `${booking.adults} Adults` : ""}
+                  {booking.children > 0 ? `, ${booking.children} Children` : ""}
+                </span>
               </div>
             </div>
 
@@ -263,7 +362,7 @@ export default function UserInfoPage() {
                 <div className="flex justify-between items-center mb-2 text-sm">
                   <span className="text-text-secondary">Subtotal</span>
                   <span className="text-text-secondary line-through">
-                    {SUMMARY.price}
+                    RM {priceNum}
                   </span>
                 </div>
               )}

@@ -42,22 +42,15 @@ export default function BookingUserInfoPage() {
     const basicFieldsValid =
       form.name.trim() !== "" &&
       form.email.trim() !== "" &&
-      form.phone.trim() !== "";
+      form.phone.trim() !== "" &&
+      form.countryCode.trim() !== "";
 
     if (isCartBooking) {
       // For cart bookings, pickup location is handled per item
       return basicFieldsValid;
     }
 
-    // For transfers with admin-defined pickup, don't require user input
-    if (
-      booking?.packageType === "transfer" &&
-      booking?.pickupOption === "admin"
-    ) {
-      return basicFieldsValid;
-    }
-
-    // For all other cases (tours or user-defined pickup), require pickup location
+    // For single bookings, always require pickup location
     return basicFieldsValid && form.pickupLocation.trim() !== "";
   };
 
@@ -269,24 +262,12 @@ export default function BookingUserInfoPage() {
   };
 
   const handleSingleBookingPayment = async () => {
-    // Check pickup location based on transfer type
-    if (
-      booking?.packageType === "transfer" &&
-      booking?.pickupOption === "user"
-    ) {
-      if (!form.pickupLocation) {
-        showToast({
-          type: "error",
-          title: "Missing Information",
-          message: "Please provide your pickup location",
-        });
-        return;
-      }
-    } else if (booking?.packageType !== "transfer" && !form.pickupLocation) {
+    // Check pickup location - now required for all bookings
+    if (!form.pickupLocation || form.pickupLocation.trim() === "") {
       showToast({
         type: "error",
         title: "Missing Information",
-        message: "Please provide your pickup location",
+        message: "Please provide your pickup location address",
       });
       return;
     }
@@ -300,10 +281,15 @@ export default function BookingUserInfoPage() {
       return;
     }
 
-    console.log("[SINGLE_PAYMENT] Preparing single booking payment flow...");
+    console.log("[SINGLE_PAYMENT] Preparing payment flow...");
 
     try {
       setIsLoading(true);
+
+      // Calculate total with bank charges
+      const subtotal = booking.totalPrice;
+      const bankCharge = subtotal * 0.028;
+      const totalAmount = subtotal + bankCharge;
 
       // Prepare booking data for payment
       const bookingData = {
@@ -311,17 +297,10 @@ export default function BookingUserInfoPage() {
         packageId: booking.packageId,
         date: booking.date,
         time: booking.time,
-        // For private (vehicle) bookings, send adults=1 to satisfy older server validation
         adults: booking.isVehicleBooking ? 1 : booking.adults,
-        children: booking.children,
-        // flag to indicate this is a per-vehicle booking (private transfer)
+        children: booking.children || 0,
         isVehicleBooking: booking.isVehicleBooking || false,
-        // For admin-defined pickup, use admin's pickup location; for user-defined, use user's input
-        pickupLocation:
-          booking?.packageType === "transfer" &&
-          booking?.pickupOption === "admin"
-            ? booking.pickupLocations || ""
-            : form.pickupLocation,
+        pickupLocation: form.pickupLocation.trim(),
         contactInfo: {
           name: form.name,
           email: form.email,
@@ -329,20 +308,10 @@ export default function BookingUserInfoPage() {
           whatsapp: `${form.countryCode}${form.phone}`,
         },
         subtotal: booking.totalPrice,
-        total: booking.totalPrice,
+        total: totalAmount,
       };
 
-      // Calculate total with bank charges
-      const subtotal = booking.totalPrice;
-      const bankCharge = subtotal * 0.028;
-      const totalAmount = subtotal + bankCharge;
-
-      console.log("[SINGLE_PAYMENT] Single booking payment data:", {
-        subtotal,
-        bankCharge,
-        totalAmount,
-        packageType: booking.packageType,
-      });
+      console.log("[SINGLE_PAYMENT] Redirecting to payment page...");
 
       // Redirect to payment page with booking data
       const paymentUrl = `/payment?${new URLSearchParams({
@@ -350,10 +319,9 @@ export default function BookingUserInfoPage() {
         bookingData: encodeURIComponent(JSON.stringify(bookingData)),
       })}`;
 
-      console.log("[SINGLE_PAYMENT] Redirecting to payment:", paymentUrl);
       router.push(paymentUrl);
     } catch (error: any) {
-      console.error("Single booking payment preparation error:", error);
+      console.error("Payment preparation error:", error);
       showToast({
         type: "error",
         title: "Error",
@@ -417,55 +385,25 @@ export default function BookingUserInfoPage() {
             </div>
           ))}
 
-          {/* Pickup Location - Hide for cart bookings (handled per item), show conditional for single booking */}
+          {/* Pickup Location - Always show as text input for user to enter their pickup address */}
           {!isCartBooking && (
             <>
-              {booking?.packageType === "transfer" &&
-              booking?.pickupOption === "admin" ? (
-                // Admin-defined pickup location - render as a normal select control
-                <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pickup Location:
-                  </label>
-                  {/* Render admin-defined pickup options as a select to match add-to-cart flow */}
-                  {booking.pickupLocations ? (
-                    <select
-                      name="pickupLocation"
-                      value={form.pickupLocation}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-primary_green/40 rounded-md focus:outline-none focus:ring-2 focus:ring-primary_green focus:border-transparent"
-                    >
-                      <option value="">Choose a pickup location...</option>
-                      {booking.pickupLocations
-                        .split(",")
-                        .map((loc: string, i: number) => {
-                          // Strip any HTML tags saved in admin content before showing
-                          const stripped = loc.replace(/<[^>]*>/g, "").trim();
-                          return (
-                            <option key={i} value={stripped}>
-                              {stripped}
-                            </option>
-                          );
-                        })}
-                    </select>
-                  ) : (
-                    <div className="text-sm text-gray-500">
-                      No pickup locations configured
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // User-defined pickup location - show input field
-                <div className="w-full">
-                  <input
-                    name="pickupLocation"
-                    value={form.pickupLocation}
-                    onChange={handleChange}
-                    placeholder="Enter your Hostel/Hotel name and address"
-                    className="w-full border border-primary_green/40 rounded px-4 py-2 placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-primary_green"
-                  />
-                </div>
-              )}
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pickup Location:
+                </label>
+                <input
+                  name="pickupLocation"
+                  value={form.pickupLocation}
+                  onChange={handleChange}
+                  placeholder="Enter your Hostel/Hotel name and complete address"
+                  className="w-full border border-primary_green/40 rounded px-4 py-2 placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-primary_green"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Please provide your complete pickup address including
+                  hotel/hostel name
+                </p>
+              </div>
 
               {/* Display pickup guidelines/locations */}
               {(() => {

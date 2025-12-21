@@ -23,11 +23,13 @@ import { format } from "date-fns";
 import "react-day-picker/style.css";
 import { tourApi } from "@/lib/tourApi";
 import { TourType } from "@/lib/types";
+import { useBooking } from "@/context/BookingContext";
 
 export default function TourDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const { setBooking } = useBooking();
 
   const [tour, setTour] = useState<TourType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +41,20 @@ export default function TourDetailPage() {
   const [children, setChildren] = useState(0);
   const [selectedRating, setSelectedRating] = useState(0);
   const calendarRef = useRef<HTMLDivElement>(null);
+
+  // Time slots state
+  const [timeSlots, setTimeSlots] = useState<
+    Array<{
+      time: string;
+      isAvailable: boolean;
+      bookedCount: number;
+      capacity: number;
+      minimumPerson: number;
+      currentMinimum: number;
+    }>
+  >([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [validationError, setValidationError] = useState<string>("");
 
   // Fetch tour data from API
   useEffect(() => {
@@ -61,6 +77,57 @@ export default function TourDetailPage() {
     }
   }, [slug]);
 
+  // Fetch time slots when date is selected
+  useEffect(() => {
+    const fetchTimeSlots = async () => {
+      if (!selectedDate || !tour?._id) {
+        setTimeSlots([]);
+        return;
+      }
+
+      setLoadingSlots(true);
+      setValidationError("");
+      setSelectedTime(""); // Reset selected time when date changes
+
+      try {
+        const dateString =
+          selectedDate.getFullYear() +
+          "-" +
+          String(selectedDate.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(selectedDate.getDate()).padStart(2, "0");
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/timeslots/available?packageType=tour&packageId=${tour._id}&date=${dateString}`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          const slots = Array.isArray(data.data) ? data.data : [];
+          setTimeSlots(slots);
+
+          // Log slot information for debugging
+          console.log(`📅 Loaded ${slots.length} time slots for ${dateString}`);
+          slots.forEach((slot: any) => {
+            console.log(
+              `⏰ ${slot.time}: Available=${slot.isAvailable}, Booked=${slot.bookedCount}/${slot.capacity}, MinPerson=${slot.currentMinimum}`
+            );
+          });
+        } else {
+          setTimeSlots([]);
+          console.error("Failed to fetch time slots:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching time slots:", error);
+        setTimeSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+
+    fetchTimeSlots();
+  }, [selectedDate, tour?._id]);
+
   // Close calendar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,8 +148,101 @@ export default function TourDetailPage() {
     };
   }, [showCalendar]);
 
+  // Validate booking before proceeding
+  const validateBooking = (): boolean => {
+    setValidationError("");
+
+    if (!selectedDate) {
+      setValidationError("Please select a date");
+      return false;
+    }
+
+    if (!selectedTime) {
+      setValidationError("Please select a time slot");
+      return false;
+    }
+
+    // Find the selected slot
+    const selectedSlot = timeSlots.find((slot) => slot.time === selectedTime);
+    if (!selectedSlot) {
+      setValidationError("Invalid time slot selected");
+      return false;
+    }
+
+    // Check if slot is available
+    if (!selectedSlot.isAvailable) {
+      setValidationError("This time slot is no longer available");
+      return false;
+    }
+
+    const totalGuests = adults + children;
+
+    // Validate minimum person requirement
+    if (totalGuests < selectedSlot.currentMinimum) {
+      if (selectedSlot.bookedCount === 0) {
+        setValidationError(
+          `First booking requires at least ${selectedSlot.currentMinimum} guests for this tour`
+        );
+      } else {
+        setValidationError(
+          `Minimum ${selectedSlot.currentMinimum} guests required for this slot`
+        );
+      }
+      return false;
+    }
+
+    // Check available capacity
+    const availableCapacity = selectedSlot.capacity - selectedSlot.bookedCount;
+    if (totalGuests > availableCapacity) {
+      setValidationError(
+        `Only ${availableCapacity} spots available for this time slot`
+      );
+      return false;
+    }
+
+    return true;
+  };
+
   const handleBook = () => {
-    router.push(`/booking/tour/${slug}`);
+    if (!validateBooking() || !tour || !selectedDate) {
+      return;
+    }
+
+    // Calculate total price
+    const totalPrice = adults * tour.newPrice + children * tour.childPrice;
+
+    // Fix date handling to prevent offset issues
+    const bookingDate = new Date(selectedDate);
+    // Ensure the date is set to noon to avoid timezone issues
+    bookingDate.setHours(12, 0, 0, 0);
+
+    // Set booking data in context
+    setBooking({
+      packageId: tour._id,
+      title: tour.title,
+      slug: slug,
+      date: bookingDate.toISOString(), // Use full ISO string to preserve date
+      time: selectedTime,
+      type: tour.type || "Private Tour",
+      duration: tour.duration || "4-6 hours",
+      adults: tour.type === "private" ? 1 : adults, // Set to 1 for private tours for booking system compatibility
+      children: tour.type === "private" ? 0 : children,
+      adultPrice: tour.type === "private" ? tour.newPrice : tour.newPrice,
+      childPrice: tour.childPrice || 0,
+      totalPrice: totalPrice,
+      total: totalPrice,
+      packageType: "tour",
+      image: tour.image || "",
+      transport: tour.type === "private" ? "Private" : undefined,
+      // Set pickup locations (HTML content from pickupLocations field - join array with commas)
+      pickupLocations: tour.details.pickupLocations?.join(", ") || "",
+      // Set pickup guidelines/description (from pickupGuidelines or notes field - join notes array)
+      pickupDescription:
+        tour.details.pickupGuidelines || tour.details.notes?.join("\n") || "",
+    });
+
+    // Navigate directly to user-info page
+    router.push(`/user-info?tour=${slug}`);
   };
 
   // Loading state
@@ -489,6 +649,105 @@ export default function TourDetailPage() {
                 </div>
               </div>
 
+              {/* Time Slots - Show only when date is selected */}
+              {selectedDate && (
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-text-primary mb-2">
+                    Select Time Slot
+                  </label>
+
+                  {loadingSlots ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : timeSlots.length === 0 ? (
+                    <div className="text-center py-6 px-4 bg-amber-50 border border-amber-200 rounded-xl">
+                      <p className="text-sm text-amber-800">
+                        No time slots available for this date
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {timeSlots.map((slot) => {
+                        const availableSpots = slot.capacity - slot.bookedCount;
+                        const isDisabled =
+                          !slot.isAvailable || availableSpots === 0;
+                        const isSelected = selectedTime === slot.time;
+
+                        return (
+                          <button
+                            key={slot.time}
+                            onClick={() =>
+                              !isDisabled && setSelectedTime(slot.time)
+                            }
+                            disabled={isDisabled}
+                            className={`
+                              px-3 py-3 rounded-xl text-sm font-medium transition-all relative
+                              ${
+                                isSelected
+                                  ? "bg-primary text-white ring-2 ring-primary ring-offset-2"
+                                  : isDisabled
+                                  ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                                  : "bg-white border-2 border-neutral-200 text-text-primary hover:border-primary hover:bg-primary/5"
+                              }
+                            `}
+                          >
+                            <div className="font-semibold">{slot.time}</div>
+                            {!isDisabled && (
+                              <div
+                                className={`text-xs mt-1 ${
+                                  isSelected
+                                    ? "text-white/80"
+                                    : "text-text-light"
+                                }`}
+                              >
+                                {availableSpots} spot
+                                {availableSpots !== 1 ? "s" : ""} left
+                              </div>
+                            )}
+                            {isDisabled && (
+                              <div className="text-xs mt-1">
+                                {slot.isAvailable ? "Full" : "Closed"}
+                              </div>
+                            )}
+                            {slot.bookedCount === 0 && !isDisabled && (
+                              <div
+                                className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                                  isSelected ? "bg-yellow-300" : "bg-accent"
+                                }`}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Show minimum person info if a slot is selected */}
+                  {selectedTime &&
+                    timeSlots.find((s) => s.time === selectedTime) && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs text-blue-800">
+                          <strong>Note:</strong> This time slot requires a
+                          minimum of{" "}
+                          <strong>
+                            {
+                              timeSlots.find((s) => s.time === selectedTime)
+                                ?.currentMinimum
+                            }
+                          </strong>{" "}
+                          guest
+                          {timeSlots.find((s) => s.time === selectedTime)
+                            ?.currentMinimum !== 1
+                            ? "s"
+                            : ""}
+                          .
+                        </p>
+                      </div>
+                    )}
+                </div>
+              )}
+
               {/* Guests */}
               <div className="mb-4 sm:mb-6">
                 <label className="block text-sm font-semibold text-text-primary mb-3">
@@ -548,19 +807,45 @@ export default function TourDetailPage() {
               {/* Total */}
               <div className="flex items-center justify-between py-3 sm:py-4 border-t border-neutral-100 mb-3 sm:mb-4">
                 <span className="text-sm sm:text-base text-text-secondary font-medium">
-                  Total
+                  Total ({adults + children} guest
+                  {adults + children !== 1 ? "s" : ""})
                 </span>
                 <span className="text-xl sm:text-2xl font-bold text-primary">
                   RM {totalPrice}
                 </span>
               </div>
 
+              {/* Validation Error Display */}
+              {validationError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800 flex items-center gap-2">
+                    <BsExclamationCircle className="flex-shrink-0" />
+                    <span>{validationError}</span>
+                  </p>
+                </div>
+              )}
+
               {/* Book Now Button */}
               <button
                 onClick={handleBook}
-                className="w-full py-3 sm:py-4 text-sm sm:text-base bg-primary text-white font-bold rounded-lg sm:rounded-xl hover:shadow-lg transition-all active:scale-[0.98]"
+                disabled={!selectedDate || !selectedTime}
+                className={`
+                  w-full py-3 sm:py-4 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl 
+                  transition-all active:scale-[0.98] flex items-center justify-center gap-2
+                  ${
+                    !selectedDate || !selectedTime
+                      ? "bg-neutral-300 text-neutral-500 cursor-not-allowed"
+                      : "bg-primary text-white hover:shadow-lg hover:bg-primary-dark"
+                  }
+                `}
               >
-                Book Now
+                {!selectedDate ? (
+                  <>Select Date to Continue</>
+                ) : !selectedTime ? (
+                  <>Select Time Slot to Continue</>
+                ) : (
+                  <>Book Now</>
+                )}
               </button>
 
               {/* Contact Info */}

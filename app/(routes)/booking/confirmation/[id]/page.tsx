@@ -376,50 +376,25 @@ export default function BookingConfirmationPage() {
   useEffect(() => {
     const fetchBooking = async () => {
       try {
-        // Check if this is a demo booking
-        if (bookingId.startsWith("demo-")) {
-          // Create mock booking data for demo purposes
-          const mockBooking: BookingDetails = {
-            _id: bookingId,
-            packageType: "tour",
-            packageId: {
-              _id: "demo-package-id",
-              title: "Mossy Forest Adventure",
-              image: "/images/tour1.jpg",
-              type: "shared",
-              details: {
-                pickupGuidelines:
-                  "Please arrive 15 minutes before your scheduled pickup time. Bring your booking confirmation and valid ID.",
-              },
-            },
-            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split("T")[0], // 7 days from now
-            time: "7:00 AM",
-            adults: 2,
-            children: 1,
-            pickupLocation: "Tanah Rata Town Center",
-            status: "confirmed",
-            contactInfo: {
-              name: "Demo User",
-              email: "demo@example.com",
-              phone: "+60 12-345 6789",
-            },
-            total: 245,
-            createdAt: new Date().toISOString(),
-            isVehicleBooking: false,
-          };
-          setBooking(mockBooking);
-          setIsLoading(false);
-          return;
-        }
+        console.log("[CONFIRMATION] Fetching booking:", bookingId);
+        console.log("[CONFIRMATION] API URL:", process.env.NEXT_PUBLIC_API_URL);
 
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${bookingId}`
         );
         const data = await response.json();
 
+        console.log("[CONFIRMATION] Response status:", response.status);
+        console.log("[CONFIRMATION] Response data:", data);
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
+
         if (data.success && data.data) {
+          console.log("[CONFIRMATION] Booking found:", data.data._id);
           // Extract pickup guidelines from packageId details if available
           const bookingData = { ...data.data };
           if (bookingData.packageId?.details?.pickupGuidelines) {
@@ -435,19 +410,16 @@ export default function BookingConfirmationPage() {
           }
           setBooking(bookingData);
         } else {
-          showToast({
-            type: "error",
-            title: "Error",
-            message: data.error || "Booking not found",
-          });
-          safeRedirectHome();
+          throw new Error(data.error || "Booking not found in response");
         }
-      } catch (error) {
-        console.error("Error fetching booking:", error);
+      } catch (error: any) {
+        console.error("[CONFIRMATION] Error fetching booking:", error);
         showToast({
           type: "error",
-          title: "Error",
-          message: "Failed to load booking details",
+          title: "Booking Not Found",
+          message:
+            error.message ||
+            "Failed to load booking details. Please check your booking ID or contact support.",
         });
         safeRedirectHome();
       } finally {

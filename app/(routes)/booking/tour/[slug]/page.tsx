@@ -418,7 +418,7 @@ export default function BookingInfoPage() {
     // Get minimum person requirement for selected time slot
     const selectedSlot = timeSlots.find((slot) => slot.time === selectedTime);
     const minimumRequired = selectedSlot
-      ? selectedSlot.minimumPerson // Use slot's minimumPerson directly
+      ? selectedSlot.currentMinimum || selectedSlot.minimumPerson // Use currentMinimum for validation
       : tourDetails.minimumPerson || 1;
 
     if (tourDetails.type === "private") {
@@ -454,7 +454,7 @@ export default function BookingInfoPage() {
     // Get minimum person requirement for selected time slot
     const selectedSlot = timeSlots.find((slot) => slot.time === selectedTime);
     const minimumRequired = selectedSlot
-      ? selectedSlot.minimumPerson // Use slot's minimumPerson directly
+      ? selectedSlot.currentMinimum || selectedSlot.minimumPerson // Use currentMinimum for validation
       : tourDetails.minimumPerson || 1;
 
     const newTotal = adults + newCount;
@@ -514,19 +514,28 @@ export default function BookingInfoPage() {
 
     // For private tours, skip guest validation since it's vehicle-based
     if (tourDetails.type !== "private") {
-      // Check minimum adults requirement (children don't count toward minimum)
-      if (adults < selectedSlot.minimumPerson) {
+      // Use currentMinimum for validation (this reflects the first booking rule)
+      const requiredMinimum =
+        selectedSlot.currentMinimum || selectedSlot.minimumPerson;
+      const totalGuests = adults + children;
+
+      // Check minimum guest requirement
+      if (totalGuests < requiredMinimum) {
+        const isFirstBooking = selectedSlot.bookedCount === 0;
         showToast({
           type: "error",
-          title: "Minimum adults required",
-          message: `Please select at least ${selectedSlot.minimumPerson} adult${
-            selectedSlot.minimumPerson > 1 ? "s" : ""
-          } for this time slot. Current adults: ${adults}`,
+          title: "Minimum guests required",
+          message: isFirstBooking
+            ? `First booking for this tour requires at least ${requiredMinimum} guest${
+                requiredMinimum > 1 ? "s" : ""
+              }. Current: ${totalGuests}`
+            : `This time slot requires at least ${requiredMinimum} guest${
+                requiredMinimum > 1 ? "s" : ""
+              }. Current: ${totalGuests}`,
         });
         return;
       }
 
-      const totalGuests = adults + children;
       if (totalGuests > selectedSlot.capacity - selectedSlot.bookedCount) {
         showToast({
           type: "error",

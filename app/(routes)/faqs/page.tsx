@@ -45,7 +45,7 @@ const allFaqs: FAQType[] = [
     id: 6,
     question: "What are the tour pick-up and drop-off times?",
     answer:
-      "Most tours begin between 8:00-9:00 AM and conclude by 5:00-6:00 PM. Exact times are confirmed after booking and depend on your accommodation location.",
+      "Most tours start between 8:00 and 8:15 AM. Please wait at the main entrance or the security gate of the property for pickup. Drop off time depends on traffic: •	Half day tour, around 4 hours • Full day tour, around 7 hours",
     category: "Tours",
   },
   {

@@ -38,7 +38,7 @@ async function dbConnect(): Promise<typeof mongoose> {
 
     if (!cached.promise) {
         const opts = {
-            dbName: "oastel",
+            dbName: "cameronhighlandstours",
             bufferCommands: false,
             // Add connection timeouts for Vercel
             serverSelectionTimeoutMS: 5000, // 5 seconds

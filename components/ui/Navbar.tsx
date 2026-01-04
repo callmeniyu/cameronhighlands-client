@@ -177,7 +177,7 @@ export default function Navbar() {
 
           {/* Dropdown */}
           <div
-            className={`absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg transform transition-all duration-200 origin-top z-50 ${
+            className={`absolute right-2 mt-72 w-48 bg-white border rounded-md shadow-lg transform transition-all duration-200 origin-top z-50 ${
               showProfile
                 ? "scale-y-100 opacity-100"
                 : "scale-y-0 opacity-0 pointer-events-none"
@@ -220,15 +220,6 @@ export default function Navbar() {
                   className="block px-4 py-2 hover:bg-gray-100"
                 >
                   Bookings
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/cart"
-                  onClick={closeDropdown}
-                  className="block px-4 py-2 hover:bg-gray-100"
-                >
-                  Cart
                 </Link>
               </li>
               <li>

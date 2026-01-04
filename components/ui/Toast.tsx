@@ -24,7 +24,7 @@ const iconMap = {
 };
 
 const bgMap = {
-  success: "bg-accent border-accent/40 shadow-soft",
+  success: "bg-accent-50 border-accent/40 shadow-soft",
   info: "bg-blue-50 border-blue-500 shadow-blue-200/80",
   warning: "bg-yellow-50 border-yellow-500 shadow-yellow-200/80",
   error: "bg-red-50 border-red-500 shadow-red-200/80",

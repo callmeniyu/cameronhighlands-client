@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FiClock } from "react-icons/fi";
 import { IoStar } from "react-icons/io5";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useState, useEffect } from "react";
 
 type ModernTourCardHomeProps = {
   id: string;
@@ -37,6 +38,31 @@ export default function ModernTourCardHome({
   category,
   bookedCount,
 }: ModernTourCardHomeProps) {
+  const [actualReviewCount, setActualReviewCount] = useState(0);
+  const [combinedReviewCount, setCombinedReviewCount] = useState(
+    reviewCount || 0
+  );
+
+  useEffect(() => {
+    // Fetch actual reviews from API to get real count
+    const fetchActualReviews = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/reviews/tour/${id}`
+        );
+        const data = await res.json();
+        if (data.success) {
+          const actualCount = data.data?.length || 0;
+          setActualReviewCount(actualCount);
+          setCombinedReviewCount((reviewCount || 0) + actualCount);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch actual reviews:", err);
+      }
+    };
+    fetchActualReviews();
+  }, [id, reviewCount]);
+
   const { convertToUSD, convertToEUR } = useCurrency();
 
   const getLabelStyles = (labelType: string) => {
@@ -139,7 +165,7 @@ export default function ModernTourCardHome({
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-text-primary">
                 <IoStar className="text-amber-400" />
-                {rating} ({reviewCount})
+                {rating} ({combinedReviewCount})
               </div>
               <button className="px-4 py-2 text-sm font-semibold rounded-full border border-neutral-300 bg-white hover:border-primary hover:text-primary transition-colors">
                 Book Now

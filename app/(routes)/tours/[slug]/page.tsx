@@ -45,6 +45,7 @@ export default function TourDetailPage() {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [selectedRating, setSelectedRating] = useState(0);
+  const [combinedReviewCount, setCombinedReviewCount] = useState(0);
   const calendarRef = useRef<HTMLDivElement>(null);
 
   // Time slots state
@@ -69,6 +70,22 @@ export default function TourDetailPage() {
         const response = await tourApi.getTourBySlug(slug);
         if (response.success) {
           setTour(response.data);
+
+          // Fetch actual reviews to get combined count
+          try {
+            const reviewsRes = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/reviews/tour/${response.data._id}`
+            );
+            const reviewsData = await reviewsRes.json();
+            if (reviewsData.success) {
+              const actualCount = reviewsData.data?.length || 0;
+              const adminCount = response.data.reviewCount || 0;
+              setCombinedReviewCount(adminCount + actualCount);
+            }
+          } catch (err) {
+            console.warn("Failed to fetch actual reviews:", err);
+            setCombinedReviewCount(response.data.reviewCount || 0);
+          }
         }
       } catch (error) {
         console.error("Error fetching tour:", error);
@@ -349,7 +366,9 @@ export default function TourDetailPage() {
         <div className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 bg-white/95 rounded-full shadow-md">
           <IoStar className="text-amber-400" />
           <span className="font-bold text-neutral-800">{tour.rating}</span>
-          <span className="text-neutral-500 text-sm">({tour.reviewCount})</span>
+          <span className="text-neutral-500 text-sm">
+            ({combinedReviewCount})
+          </span>
         </div>
       </div>
 

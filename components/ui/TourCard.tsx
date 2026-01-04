@@ -11,6 +11,7 @@ import { calculateOfferPercentage } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useCurrency } from "@/context/CurrencyContext";
 import type { KeyboardEvent, MouseEvent } from "react";
+import { useState, useEffect } from "react";
 
 type TourCardProps = {
   _id: string;
@@ -45,6 +46,31 @@ export default function TourCard({
   type,
   label,
 }: TourCardProps) {
+  const [actualReviewCount, setActualReviewCount] = useState(0);
+  const [combinedReviewCount, setCombinedReviewCount] = useState(
+    reviewCount || 0
+  );
+
+  useEffect(() => {
+    // Fetch actual reviews from API to get real count
+    const fetchActualReviews = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/reviews/tour/${_id}`
+        );
+        const data = await res.json();
+        if (data.success) {
+          const actualCount = data.data?.length || 0;
+          setActualReviewCount(actualCount);
+          setCombinedReviewCount((reviewCount || 0) + actualCount);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch actual reviews:", err);
+      }
+    };
+    fetchActualReviews();
+  }, [_id, reviewCount]);
+
   // Label styling based on type
   const getLabelStyles = (labelType: string) => {
     switch (labelType) {
@@ -162,8 +188,8 @@ export default function TourCard({
 
           {/* Review/Rating Badge moved from image top */}
           {rating !== undefined &&
-            reviewCount !== undefined &&
-            reviewCount > 0 && (
+            combinedReviewCount !== undefined &&
+            combinedReviewCount > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
                 <svg
                   className="w-4 h-4 text-amber-500 fill-current"
@@ -175,7 +201,7 @@ export default function TourCard({
                   {rating.toFixed(1)}
                 </span>
                 <span className="text-xs text-gray-500">
-                  ({formatBookedCount(reviewCount)})
+                  ({formatBookedCount(combinedReviewCount)})
                 </span>
               </div>
             )}

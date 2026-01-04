@@ -30,6 +30,7 @@ export default function ReviewSection({
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [adminReviewCount, setAdminReviewCount] = useState<number>(0);
 
   // Form state
   const [rating, setRating] = useState(0);
@@ -43,7 +44,27 @@ export default function ReviewSection({
     if (isAuthenticated && user) {
       checkUserReview();
     }
+    // fetch admin-defined review count for display
+    fetchPackageReviewCount();
   }, [packageId, packageType, isAuthenticated, user]);
+
+  const fetchPackageReviewCount = async () => {
+    try {
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/${
+        packageType === "tour" ? "tours" : "transfers"
+      }/${packageId}`;
+      const res = await fetch(endpoint);
+      const data = await res.json();
+
+      // API shape: { success: true, data: package }
+      const pkg = data?.data || data;
+      const count = pkg?.reviewCount ?? 0;
+      setAdminReviewCount(Number(count) || 0);
+    } catch (err) {
+      console.warn("Failed to fetch package review count:", err);
+      setAdminReviewCount(0);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
@@ -284,8 +305,8 @@ export default function ReviewSection({
       {/* Reviews List */}
       <div className="space-y-6">
         <h3 className="text-xl font-bold">
-          {reviews.length > 0
-            ? `All Reviews (${reviews.length})`
+          {reviews.length + adminReviewCount > 0
+            ? `All Reviews (${reviews.length + adminReviewCount})`
             : "No Reviews Yet"}
         </h3>
 

@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
         <div className="space-y-3">
           <div className="text-2xl font-bold text-primary leading-tight">
-            Cameron Highlands
+            Mossy Forest
             <div className="text-lg font-medium text-text-secondary">Tours</div>
           </div>
           <p className="text-sm text-text-secondary leading-relaxed">

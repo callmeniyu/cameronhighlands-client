@@ -3,7 +3,7 @@ import { generatePageMetadata } from "@/lib/seoUtils";
 
 export const metadata: Metadata = generatePageMetadata(
   "Frequently Asked Questions",
-  "Find answers to common questions about Oastel tours and transfers. Learn about booking Mossy Forest Tours, transfer policies, pricing, and what to expect on your Cameron Highlands adventure.",
+  "Find answers to common questions about Mossy Forest Tours. Learn about booking Cameron Highlands tours, Mossy Forest tour policies, pricing, and what to expect on your adventure.",
   "/faqs",
   [
     "mossy forest entry fees",

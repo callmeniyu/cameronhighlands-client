@@ -17,7 +17,37 @@ export const SEO_KEYWORDS = {
 
   // Tour-specific keywords
   tours: [
-    'Mossy Forest tour',
+    // Core Mossy Forest keywords
+    'Mossy Forest tours',
+    'Mossy Forest tour Cameron Highlands',
+    'Cameron Highlands Mossy Forest tour',
+    'Half day Mossy Forest tour',
+    'Full day Cameron Highlands tours',
+    'Guided Mossy Forest tour',
+    'Cameron Highlands sightseeing tour',
+    
+    // Best/booking keywords
+    'Best Mossy Forest tours',
+    'Affordable Cameron Highlands tours',
+    'Private Cameron Highlands tours',
+    'Small group Mossy Forest tour',
+    'Cameron Highlands tour package',
+    'Book Mossy Forest tour',
+    
+    // Experience-based keywords
+    'Mossy Forest boardwalk tour',
+    'Mossy Forest nature tour',
+    'Cameron Highlands nature tour',
+    'Tea plantation and Mossy Forest tour',
+    'Cameron Highlands eco tour',
+    
+    // Local SEO variations
+    'Mossy Forest tour Brinchang',
+    'Mossy Forest tour Tanah Rata',
+    'Cameron Highlands tours from Brinchang',
+    'Cameron Highlands tours from Tanah Rata',
+    
+    // Additional variations
     'Mossy Forest Cameron Highlands',
     'Cameron Highlands Mossy Forest',
     'Mossy Forest hiking',
@@ -203,23 +233,31 @@ export const SEO_KEYWORDS = {
 
 // Social media and contact information
 export const SOCIAL_LINKS = {
-  instagram: 'https://www.instagram.com/oastelvibe?igsh=N3kxZGttN2ZqYXpv&utm_source=qr',
+  instagram: 'https://www.instagram.com/mossyforesttours',
   whatsapp: 'http://wa.me/60196592141'
 };
 
 // Website constants
 export const SITE_CONFIG = {
   name: 'Mossy Forest Tours',
-  title: 'Mossy Forest Tours - Mossy Forest, Sunrise & Transfers',
-  description: 'Discover Cameron Highlands with our premium tours and transfers. From Mossy Forest adventures to sunrise viewpoint tours and reliable transfers to Taman Negara & Perhentian Islands.',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://mossyforesttours.my', // Updated fallback domain
+  title: 'Mossy Forest Tours - Cameron Highlands Mossy Forest & Nature Tours',
+  description: 'Discover the magical Mossy Forest with expert-guided tours in Cameron Highlands. Book Mossy Forest tours, sunrise tours, tea plantation visits, and eco tours. Small groups, affordable prices, unforgettable experiences.',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://mossyforest.my',
   author: 'Mossy Forest Tours Team',
   keywords: [
-    ...SEO_KEYWORDS.destinations,
-    ...SEO_KEYWORDS.tours.slice(0, 15), // First 15 tour keywords
-    ...SEO_KEYWORDS.transfers.slice(0, 10), // First 10 transfer keywords
-    ...SEO_KEYWORDS.visitorInfo.slice(0, 5), // First 5 visitor info keywords
-    ...SEO_KEYWORDS.services.slice(0, 5) // First 5 service keywords
+    'Mossy Forest tours',
+    'Cameron Highlands tours',
+    'Mossy Forest tour Cameron Highlands',
+    'Cameron Highlands Mossy Forest tour',
+    'Half day Mossy Forest tour',
+    'Guided Mossy Forest tour',
+    'Best Mossy Forest tours',
+    'Book Mossy Forest tour',
+    'Mossy Forest boardwalk tour',
+    'Cameron Highlands nature tour',
+    'Tea plantation and Mossy Forest tour',
+    ...SEO_KEYWORDS.tours.slice(0, 10),
+    ...SEO_KEYWORDS.transfers.slice(0, 5),
   ]
 };
 
@@ -420,7 +458,7 @@ export function generateTwitterCard(
     title: truncateText(title, 70),
     description: truncateText(description, 160),
     images: [image || '/images/default-og-image.jpg'],
-    creator: '@oastelvibe'
+    creator: '@mossyforesttours'
   };
 }
 

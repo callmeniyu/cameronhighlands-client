@@ -6,10 +6,12 @@ import { FiUser } from "react-icons/fi";
 import { format } from "date-fns";
 import SessionHook from "@/hooks/SessionHook";
 import { useToast } from "@/context/ToastContext";
+import Image from "next/image";
 
 interface Review {
   _id: string;
   userName: string;
+  userImage?: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -37,6 +39,18 @@ export default function ReviewSection({
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
   const [showForm, setShowForm] = useState(false);
+
+  // Generate initials for text avatar
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) {
+      return parts[0].charAt(0).toUpperCase();
+    }
+    return (
+      parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
+  };
 
   // Fetch reviews and check if user has reviewed
   useEffect(() => {
@@ -74,7 +88,16 @@ export default function ReviewSection({
       const data = await response.json();
 
       if (data.success) {
-        setReviews(data.data);
+        // Transform the data to match our Review interface
+        const transformedReviews = data.data.map((review: any) => ({
+          _id: review._id,
+          userName: review.userName,
+          userImage: review.userId?.image,
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.createdAt,
+        }));
+        setReviews(transformedReviews);
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -328,17 +351,29 @@ export default function ReviewSection({
             >
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <FiUser className="text-emerald-600 text-xl" />
+                  <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
+                    {review.userImage ? (
+                      <Image
+                        src={review.userImage}
+                        alt={review.userName}
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 object-cover"
+                        unoptimized={review.userImage.includes(
+                          "googleusercontent.com"
+                        )}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark text-white font-bold text-sm">
+                        {getInitials(review.userName)}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-lg">{review.userName}</h4>
-                    <span className="text-sm text-gray-500">
-                      {format(new Date(review.createdAt), "MMM dd, yyyy")}
-                    </span>
                   </div>
 
                   <div className="mb-3">{renderStars(review.rating)}</div>

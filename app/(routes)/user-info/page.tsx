@@ -9,7 +9,6 @@ import {
   FiPhone,
   FiMapPin,
   FiArrowRight,
-  FiTag,
 } from "react-icons/fi";
 import { useBooking } from "@/context/BookingContext";
 import { format } from "date-fns";
@@ -22,9 +21,6 @@ export default function UserInfoPage() {
   const { booking } = useBooking();
   const { showToast } = useToast();
   const { convertToUSD, convertToEUR } = useCurrency();
-
-  const [couponApplied, setCouponApplied] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
 
   // Form State
   const [fullName, setFullName] = useState("");
@@ -69,16 +65,7 @@ export default function UserInfoPage() {
   }
 
   const priceNum = booking.totalPrice ? booking.totalPrice : 0;
-  // Coupon Logic
-  const availableCoupon = priceNum >= 200 ? 10 : priceNum >= 100 ? 5 : 0;
-  const discount = couponApplied ? (priceNum * availableCoupon) / 100 : 0;
-  const finalPrice = priceNum - discount;
-
-  const handleApplyCoupon = () => {
-    setCouponApplied(true);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 3000);
-  };
+  const finalPrice = priceNum;
 
   const handleNext = () => {
     // Validation
@@ -291,111 +278,12 @@ export default function UserInfoPage() {
               </div>
             </div>
 
-            {/* Confetti Effect */}
-            {showConfetti && (
-              <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-                {[...Array(50)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute animate-confetti"
-                    style={{
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 0.5}s`,
-                      fontSize: `${Math.random() * 20 + 10}px`,
-                    }}
-                  >
-                    {
-                      ["🎉", "🎊", "✨", "💫", "⭐"][
-                        Math.floor(Math.random() * 5)
-                      ]
-                    }
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Coupon System */}
-            {availableCoupon > 0 ? (
-              couponApplied ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 relative overflow-hidden">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-green-600 font-semibold text-base">
-                      🎉 {availableCoupon}% Coupon Applied!
-                    </span>
-                  </div>
-                  <div className="text-sm text-green-700">
-                    You saved RM {discount.toFixed(0)}!
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FiTag className="text-purple-600" />
-                        <span className="text-purple-800 font-bold text-base">
-                          Limited-Time Voucher Offer
-                        </span>
-                      </div>
-                      <p className="text-sm text-purple-700 mb-1">
-                        Enjoy {availableCoupon}% OFF your booking.
-                      </p>
-                      <p className="text-sm text-purple-700">
-                        Save up to RM{" "}
-                        {((priceNum * availableCoupon) / 100).toFixed(0)} today.
-                        {availableCoupon === 5 &&
-                          " Get 10% OFF on bookings over RM200!"}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleApplyCoupon}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              )
-            ) : (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <FiTag className="text-blue-600" />
-                  <span className="text-blue-800 font-semibold text-sm">
-                    Unlock Extra Savings 🎉
-                  </span>
-                </div>
-                <div className="text-xs text-blue-700 space-y-1">
-                  <div>• 5% OFF on RM100+</div>
-                  <div>• 10% OFF on RM200+</div>
-                </div>
-              </div>
-            )}
-
             <div className="pt-3 border-t border-neutral-200">
-              {couponApplied && discount > 0 && (
-                <div className="flex justify-between items-center mb-2 text-sm">
-                  <span className="text-text-secondary">Subtotal</span>
-                  <span className="text-text-secondary line-through">
-                    RM {priceNum}
-                  </span>
-                </div>
-              )}
-              {couponApplied && discount > 0 && (
-                <div className="flex justify-between items-center mb-2 text-sm">
-                  <span className="text-green-600">
-                    Discount ({availableCoupon}%)
-                  </span>
-                  <span className="text-green-600 font-semibold">
-                    -RM {discount.toFixed(0)}
-                  </span>
-                </div>
-              )}
               <div className="flex justify-between items-center">
                 <span className="text-text-secondary text-sm">Total</span>
                 <div className="text-right">
                   <div className="text-xl font-bold text-primary">
-                    RM {finalPrice.toFixed(0)}
+                    RM {finalPrice.toFixed(2)}
                   </div>
                   <div className="text-xs text-text-secondary">
                     ${convertToUSD(finalPrice)} / €{convertToEUR(finalPrice)}

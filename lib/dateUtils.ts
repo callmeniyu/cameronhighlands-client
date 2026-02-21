@@ -11,6 +11,10 @@
  * @returns Formatted date string in YYYY-MM-DD format (local timezone)
  */
 export function formatDateForServer(date: Date): string {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    throw new Error('Invalid Date object provided');
+  }
+  
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -25,8 +29,19 @@ export function formatDateForServer(date: Date): string {
  * @returns Date object representing the local date at noon
  */
 export function createLocalDate(dateString: string): Date {
+  // Validate format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    throw new Error(`Invalid date format: ${dateString}. Expected YYYY-MM-DD`);
+  }
+  
   // Use noon to avoid timezone edge cases
-  return new Date(dateString + 'T12:00:00');
+  const date = new Date(dateString + 'T12:00:00');
+  
+  if (isNaN(date.getTime())) {
+    throw new Error(`Invalid date: ${dateString}`);
+  }
+  
+  return date;
 }
 
 /**

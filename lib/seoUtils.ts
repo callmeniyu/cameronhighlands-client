@@ -240,7 +240,7 @@ export const SOCIAL_LINKS = {
 // Website constants
 export const SITE_CONFIG = {
   name: 'Mossy Forest Tours',
-  title: 'Mossy Forest Tours - Cameron Highlands Mossy Forest & Nature Tours',
+  title: 'Mossy Forest Tours | Land Rover | Guided Tours Cameron Highlands',
   description: 'Discover the magical Mossy Forest with expert-guided tours in Cameron Highlands. Book Mossy Forest tours, sunrise tours, tea plantation visits, and eco tours. Small groups, affordable prices, unforgettable experiences.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://mossyforest.my',
   author: 'Mossy Forest Tours Team',

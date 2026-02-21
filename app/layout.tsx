@@ -17,7 +17,7 @@ import {
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.mossyforest.my"),
   title: {
-    default: "Mossy Forest Eco Park – Guided Tours in Cameron Highlands",
+    default: "Mossy Forest Tours | Land Rover | Guided Tours Cameron Highlands",
     template: "%s | Mossy Forest Tours",
   },
   description:
@@ -70,8 +70,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "https://www.mossyforest.my",
-    siteName: "Mossy Forest Eco Park-Guided Tour",
-    title: "Mossy Forest Tours – Discover Amazing Tours & Experiences",
+    siteName: "Mossy Forest Tours",
+    title: "Mossy Forest Tours | Land Rover | Guided Tours Cameron Highlands",
     description:
       "Discover the magical Mossy Forest and explore Cameron Highlands with guided tours.",
   },
@@ -146,8 +146,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "Mossy Forest Eco Park-Guided Tour",
-              alternateName: "Mossy Forest Eco Park Tours",
+              name: "Mossy Forest Tours",
+              alternateName: "mossyforest.my",
               url: "https://www.mossyforest.my",
             }),
           }}
@@ -169,3 +169,4 @@ export default function RootLayout({
     </html>
   );
 }
+

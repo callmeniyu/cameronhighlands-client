@@ -124,7 +124,7 @@ export default function RootLayout({
               description:
                 "Discover the best Cameron Highlands tours and experiences with our curated tour packages",
               url: "https://www.mossyforest.my",
-              logo: "https://www.mossyforest.my/images/logo.png",
+              logo: "https://www.mossyforest.my/public/favicons/favicon-16x16.png",
               address: {
                 "@type": "PostalAddress",
                 addressRegion: "Cameron Highlands",
@@ -147,7 +147,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "Mossy Forest Tours",
-              alternateName: "mossyforest.my",
+              alternateName: "MossyForest Tours",
               url: "https://www.mossyforest.my",
             }),
           }}
@@ -169,4 +169,3 @@ export default function RootLayout({
     </html>
   );
 }
-

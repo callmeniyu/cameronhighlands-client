@@ -56,6 +56,7 @@ export type TourType = {
     minimumPerson: number
     maximumPerson?: number
     vehicle?: string
+    vehicleUnits?: number
     seatCapacity?: number
     departureTimes: string[]
     label?: "Recommended" | "Popular" | "Best Value" | "Best seller" | null

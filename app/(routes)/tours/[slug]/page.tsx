@@ -194,8 +194,12 @@ export default function TourDetailPage() {
 
     const totalGuests = adults + children;
 
-    // Validate minimum person requirement
-    if (totalGuests < selectedSlot.currentMinimum) {
+    // Validate minimum person requirement (skip for private tours)
+    if (
+      tour &&
+      tour.type !== "private" &&
+      totalGuests < selectedSlot.currentMinimum
+    ) {
       if (selectedSlot.bookedCount === 0) {
         setValidationError(
           `First booking requires at least ${selectedSlot.currentMinimum} guests for this tour`,
@@ -226,7 +230,10 @@ export default function TourDetailPage() {
     }
 
     // Calculate total price with convenience fee
-    const subtotalPrice = adults * tour.newPrice + children * tour.childPrice;
+    const subtotalPrice =
+      tour.type === "private"
+        ? tour.newPrice
+        : adults * tour.newPrice + children * tour.childPrice;
     const convenienceFee = subtotalPrice * 0.03; // 3% bank convenience fee
     const totalPrice = subtotalPrice + convenienceFee;
 
@@ -303,7 +310,10 @@ export default function TourDetailPage() {
       ? Math.round((1 - tour.newPrice / tour.oldPrice) * 100)
       : 0;
 
-  const subtotalPrice = adults * tour.newPrice + children * tour.childPrice;
+  const subtotalPrice =
+    tour.type === "private"
+      ? tour.newPrice
+      : adults * tour.newPrice + children * tour.childPrice;
   const convenienceFee = subtotalPrice * 0.03; // 3% bank convenience fee
   const totalPrice = subtotalPrice + convenienceFee;
 
@@ -405,12 +415,19 @@ export default function TourDetailPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-text-secondary mb-1">
-                  <TourPriceDisplay price={tour.newPrice} label="per adult" />
+                  <TourPriceDisplay
+                    price={tour.newPrice}
+                    label={
+                      tour.type === "private" ? "per vehicle" : "per adult"
+                    }
+                  />
                 </div>
-                <div className="text-text-light text-xs mt-1">
-                  Child (3-11 years): RM {tour.childPrice} (
-                  <TourPriceDisplay price={tour.childPrice} />)
-                </div>
+                {tour.type !== "private" && (
+                  <div className="text-text-light text-xs mt-1">
+                    Child (3-11 years): RM {tour.childPrice} (
+                    <TourPriceDisplay price={tour.childPrice} />)
+                  </div>
+                )}
               </div>
 
               {/* Date Selection */}
@@ -652,73 +669,102 @@ export default function TourDetailPage() {
                 </div>
               )}
 
-              {/* Guests */}
-              <div className="mb-4 sm:mb-6 gap">
-                <label className="block text-sm font-semibold text-text-primary mb-3">
-                  Guests
-                </label>
-                <div className="flex justify-between gap-3">
-                  <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
-                    <FiUser className="text-primary text-base" />
-                    Adults
+              {/* Guests or Private Tour Info */}
+              {tour.type === "private" ? (
+                <div className="mb-4 sm:mb-6">
+                  <label className="block text-sm font-semibold text-text-primary mb-3">
+                    Private Vehicle Booking
                   </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setAdults(Math.max(1, adults - 1))}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
-                      {adults}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setAdults(
-                          Math.min(tour.maximumPerson || 50, adults + 1),
-                        )
-                      }
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex justify-between">
-                  <label className="mt-4 items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
-                    <div className="flex gap-2">
-                      <HiOutlineUserGroup className="text-primary text-lg" />
-                      Children
+                  <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <MdOutlineDirectionsCar className="text-primary text-2xl flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-text-primary mb-1">
+                          {tour.vehicle || "Private Vehicle"}
+                        </div>
+                        <div className="text-sm text-text-secondary">
+                          Capacity: {tour.seatCapacity || 4} seats
+                        </div>
+                      </div>
                     </div>
-                    <p>(3-11 years)</p>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setChildren(Math.max(0, children - 1))}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
-                      {children}
-                    </span>
-                    <button
-                      onClick={() => setChildren(children + 1)}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      +
-                    </button>
+                    <div className="pt-2 border-t border-primary/10">
+                      <p className="text-xs text-text-secondary leading-relaxed">
+                        <BsExclamationCircle className="inline mr-1.5 text-primary" />
+                        You're booking the whole vehicle including{" "}
+                        {tour.seatCapacity || 4} seats
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mb-4 sm:mb-6 gap">
+                  <label className="block text-sm font-semibold text-text-primary mb-3">
+                    Guests
+                  </label>
+                  <div className="flex justify-between gap-3">
+                    <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
+                      <FiUser className="text-primary text-base" />
+                      Adults
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setAdults(Math.max(1, adults - 1))}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                      >
+                        −
+                      </button>
+                      <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
+                        {adults}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setAdults(
+                            Math.min(tour.maximumPerson || 50, adults + 1),
+                          )
+                        }
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <label className="mt-4 items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
+                      <div className="flex gap-2">
+                        <HiOutlineUserGroup className="text-primary text-lg" />
+                        Children
+                      </div>
+                      <p>(3-11 years)</p>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setChildren(Math.max(0, children - 1))}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                      >
+                        −
+                      </button>
+                      <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
+                        {children}
+                      </span>
+                      <button
+                        onClick={() => setChildren(children + 1)}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Total */}
               <div className="border-t border-neutral-100 pt-3 sm:pt-4 mb-3 sm:mb-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-text-secondary">
-                    Subtotal ({adults + children} guest
-                    {adults + children !== 1 ? "s" : ""})
+                    {tour.type === "private"
+                      ? "Private Vehicle Booking"
+                      : `Subtotal (${adults + children} guest${adults + children !== 1 ? "s" : ""})`}
                   </span>
                   <span className="text-text-primary font-medium">
                     RM {subtotalPrice.toFixed(2)}
@@ -906,12 +952,19 @@ export default function TourDetailPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-text-secondary mb-1">
-                  <TourPriceDisplay price={tour.newPrice} label="per adult" />
+                  <TourPriceDisplay
+                    price={tour.newPrice}
+                    label={
+                      tour.type === "private" ? "per vehicle" : "per adult"
+                    }
+                  />
                 </div>
-                <div className="text-text-light text-xs mt-1">
-                  Child (3-11 years): RM {tour.childPrice} (
-                  <TourPriceDisplay price={tour.childPrice} />)
-                </div>
+                {tour.type !== "private" && (
+                  <div className="text-text-light text-xs mt-1">
+                    Child (3-11 years): RM {tour.childPrice} (
+                    <TourPriceDisplay price={tour.childPrice} />)
+                  </div>
+                )}
               </div>
 
               {/* Date Selection */}
@@ -1156,70 +1209,98 @@ export default function TourDetailPage() {
               {/* Guests */}
               <div className="mb-4 sm:mb-6 gap">
                 <label className="block text-sm font-semibold text-text-primary mb-3">
-                  Guests
+                  {tour.type === "private"
+                    ? "Private Vehicle Booking"
+                    : "Guests"}
                 </label>
-                <div className="flex justify-between gap-3">
-                  <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
-                    <FiUser className="text-primary text-base" />
-                    Adults
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setAdults(Math.max(1, adults - 1))}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
-                      {adults}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setAdults(
-                          Math.min(tour.maximumPerson || 50, adults + 1),
-                        )
-                      }
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex justify-between">
-                  <label className="mt-4 items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
-                    <div className="flex gap-2">
-                      <HiOutlineUserGroup className="text-primary text-lg" />
-                      Children
+                {tour.type === "private" ? (
+                  <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <MdOutlineDirectionsCar className="text-primary text-2xl flex-shrink-0 mt-1" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-text-primary mb-1">
+                          {tour.vehicle || "Private Vehicle"}
+                        </div>
+                        <div className="text-sm text-text-secondary mb-2">
+                          Capacity: {tour.seatCapacity || "N/A"} seats
+                        </div>
+                        <div className="flex items-start gap-2 text-xs text-text-secondary">
+                          <BsExclamationCircle className="flex-shrink-0 mt-0.5" />
+                          <span>
+                            You're booking the whole vehicle including{" "}
+                            {tour.seatCapacity || "all"} seats
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p>(3-11 years)</p>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setChildren(Math.max(0, children - 1))}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
-                      {children}
-                    </span>
-                    <button
-                      onClick={() => setChildren(children + 1)}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
-                    >
-                      +
-                    </button>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between gap-3">
+                      <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
+                        <FiUser className="text-primary text-base" />
+                        Adults
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setAdults(Math.max(1, adults - 1))}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                        >
+                          −
+                        </button>
+                        <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
+                          {adults}
+                        </span>
+                        <button
+                          onClick={() =>
+                            setAdults(
+                              Math.min(tour.maximumPerson || 50, adults + 1),
+                            )
+                          }
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <label className="mt-4 items-center gap-2 text-xs sm:text-sm font-semibold text-text-primary mb-2">
+                        <div className="flex gap-2">
+                          <HiOutlineUserGroup className="text-primary text-lg" />
+                          Children
+                        </div>
+                        <p>(3-11 years)</p>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setChildren(Math.max(0, children - 1))}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                        >
+                          −
+                        </button>
+                        <span className="w-10 sm:w-12 text-center font-semibold text-base sm:text-lg">
+                          {children}
+                        </span>
+                        <button
+                          onClick={() => setChildren(children + 1)}
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-neutral-100 text-text-primary hover:bg-neutral-200 active:scale-95 transition-all font-medium text-lg"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Total */}
               <div className="border-t border-neutral-100 pt-3 sm:pt-4 mb-3 sm:mb-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-text-secondary">
-                    Subtotal ({adults + children} guest
-                    {adults + children !== 1 ? "s" : ""})
+                    {tour.type === "private"
+                      ? "Private Vehicle Booking"
+                      : `Subtotal (${adults + children} guest${adults + children !== 1 ? "s" : ""})`}
                   </span>
                   <span className="text-text-primary font-medium">
                     RM {subtotalPrice.toFixed(2)}

@@ -23,6 +23,7 @@ export default function CheckoutForm({
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false); // Prevent double-click
 
   const handleSubmit = async (event?: React.FormEvent) => {
     // If invoked as a submit handler, prevent the default browser submit.
@@ -35,6 +36,15 @@ export default function CheckoutForm({
       return;
     }
 
+    // Prevent double-click/double-submit
+    if (isProcessing || loading) {
+      console.warn(
+        "[CHECKOUT] Payment already in progress, ignoring duplicate submission",
+      );
+      return;
+    }
+
+    setIsProcessing(true);
     setLoading(true);
     setErrorMessage("");
 
@@ -46,7 +56,7 @@ export default function CheckoutForm({
       if (submitError) {
         console.error("[CHECKOUT] Form validation error:", submitError);
         setErrorMessage(
-          submitError.message || "Please fill in all required fields"
+          submitError.message || "Please fill in all required fields",
         );
         setLoading(false);
         return;
@@ -71,7 +81,7 @@ export default function CheckoutForm({
         console.log(
           "[CHECKOUT] Payment successful:",
           paymentIntent.id,
-          paymentIntent.status
+          paymentIntent.status,
         );
 
         if (paymentIntent.status === "succeeded") {
@@ -79,7 +89,7 @@ export default function CheckoutForm({
         } else {
           console.error(
             "[CHECKOUT] Payment not successful:",
-            paymentIntent.status
+            paymentIntent.status,
           );
           const statusError = {
             message: `Payment status: ${paymentIntent.status}`,
@@ -99,6 +109,7 @@ export default function CheckoutForm({
       onError(unexpectedError);
     } finally {
       setLoading(false);
+      setIsProcessing(false); // Reset processing flag
     }
   };
 
@@ -148,6 +159,7 @@ export default function CheckoutForm({
 
       {/* Submit Button */}
       <button
+        disabled={!stripe || loading || isProcessing}
         type="button"
         onClick={(e) => handleSubmit(e)}
         disabled={loading || !stripe || !elements}

@@ -481,8 +481,9 @@ export default function ReviewSection({
               key={review._id}
               className="border border-gray-200 rounded-lg p-4 md:p-6"
             >
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
+              {/* Mobile: Avatar floated left with text wrapping */}
+              <div className="md:flex md:items-start md:gap-4">
+                <div className="float-left mr-3 mb-2 md:float-none md:mr-0 md:mb-0 md:flex-shrink-0">
                   <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
                     {review.userImage ? (
                       <Image
@@ -503,7 +504,7 @@ export default function ReviewSection({
                   </div>
                 </div>
 
-                <div className="flex-1">
+                <div className="md:flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-lg">{review.userName}</h4>
                   </div>
@@ -536,6 +537,8 @@ export default function ReviewSection({
                     {format(new Date(review.createdAt), "MMM dd, yyyy")}
                   </p>
                 </div>
+                {/* Clear float for mobile */}
+                <div className="clear-both md:hidden"></div>
               </div>
             </div>
           ))

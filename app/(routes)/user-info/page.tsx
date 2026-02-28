@@ -212,6 +212,48 @@ export default function UserInfoPage() {
       return;
     }
 
+    // Name validation - minimum 5 characters
+    if (fullName.trim().length < 5) {
+      showToast({
+        type: "error",
+        title: "Invalid Name",
+        message: "Name must be at least 5 characters long.",
+      });
+      return;
+    }
+
+    // Email validation - proper format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      showToast({
+        type: "error",
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    // Phone validation - minimum 5 digits (excluding country code)
+    const phoneDigits = phone.replace(/\D/g, ""); // Remove non-digits
+    if (phoneDigits.length < 5) {
+      showToast({
+        type: "error",
+        title: "Invalid Phone Number",
+        message: "Phone number must contain at least 5 digits.",
+      });
+      return;
+    }
+
+    // Pickup location validation - minimum 10 characters
+    if (!pickupLocation || pickupLocation.trim().length < 10) {
+      showToast({
+        type: "error",
+        title: "Invalid Pickup Location",
+        message: "Pickup location must be at least 10 characters long.",
+      });
+      return;
+    }
+
     if (!pickupLocation && pickupOptions.length > 0) {
       showToast({
         type: "error",

@@ -12,12 +12,14 @@ interface CheckoutFormProps {
   onSuccess: (paymentIntent: any) => void;
   onError: (error: any) => void;
   isCartBooking: boolean;
+  confirmingBooking?: boolean;
 }
 
 export default function CheckoutForm({
   onSuccess,
   onError,
   isCartBooking,
+  confirmingBooking = false,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -159,17 +161,21 @@ export default function CheckoutForm({
 
       {/* Submit Button */}
       <button
-        disabled={!stripe || loading || isProcessing}
+        disabled={!stripe || loading || isProcessing || confirmingBooking}
         type="button"
         onClick={(e) => handleSubmit(e)}
-        disabled={loading || !stripe || !elements}
         className={`w-full py-3 px-4 rounded-md font-semibold text-white transition-colors ${
-          loading || !stripe || !elements
+          loading || !stripe || !elements || confirmingBooking
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-primary_green hover:bg-primary_green/90"
         }`}
       >
-        {loading ? (
+        {confirmingBooking ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+            Confirming Booking...
+          </div>
+        ) : loading ? (
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
             Processing Payment...

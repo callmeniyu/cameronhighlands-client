@@ -10,7 +10,7 @@ import { paymentApi } from "@/lib/paymentApi";
 import { FiShield, FiArrowLeft } from "react-icons/fi";
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
 );
 
 export default function PaymentPage() {
@@ -25,6 +25,7 @@ export default function PaymentPage() {
   const [clientSecret, setClientSecret] = useState<string>("");
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [paymentIntentCreated, setPaymentIntentCreated] = useState(false);
+  const [confirmingBooking, setConfirmingBooking] = useState(false);
 
   useEffect(() => {
     const validatePaymentData = async () => {
@@ -106,11 +107,11 @@ export default function PaymentPage() {
             setPaymentIntentCreated(true);
             console.log(
               "[PAYMENT_PAGE] Cart payment intent created:",
-              response.data.paymentIntentId
+              response.data.paymentIntentId,
             );
           } else {
             throw new Error(
-              response.error || "Failed to create payment intent"
+              response.error || "Failed to create payment intent",
             );
           }
         } else {
@@ -125,11 +126,11 @@ export default function PaymentPage() {
             setPaymentIntentCreated(true);
             console.log(
               "[PAYMENT_PAGE] Payment intent created:",
-              response.data.paymentIntentId
+              response.data.paymentIntentId,
             );
           } else {
             throw new Error(
-              response.error || "Failed to create payment intent"
+              response.error || "Failed to create payment intent",
             );
           }
         }
@@ -162,8 +163,10 @@ export default function PaymentPage() {
     try {
       console.log(
         "[PAYMENT_PAGE] Payment successful, confirming...",
-        paymentIntent.id
+        paymentIntent.id,
       );
+
+      setConfirmingBooking(true);
 
       // Confirm payment on server and create booking
       const response = await paymentApi.confirmPayment({
@@ -174,7 +177,7 @@ export default function PaymentPage() {
       if (response.success && response.data) {
         console.log(
           "[PAYMENT_PAGE] Booking created successfully:",
-          response.data.bookingIds
+          response.data.bookingIds,
         );
 
         showToast({
@@ -189,15 +192,15 @@ export default function PaymentPage() {
         if (isCartBooking) {
           router.push(
             `/booking/cart-confirmation?bookings=${response.data.bookingIds.join(
-              ","
-            )}`
+              ",",
+            )}`,
           );
         } else {
           router.push(`/booking/confirmation/${response.data.bookingIds[0]}`);
         }
       } else {
         throw new Error(
-          response.error || "Failed to create booking after payment"
+          response.error || "Failed to create booking after payment",
         );
       }
     } catch (error: any) {
@@ -259,6 +262,34 @@ export default function PaymentPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50 pt-24 pb-16 px-4">
+      {/* Booking Confirmation Overlay */}
+      {confirmingBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="mb-6">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary_green mx-auto mb-4"></div>
+                <div className="text-2xl mb-2">✅</div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Payment Successful!
+              </h3>
+              <p className="text-gray-600 mb-2">
+                Confirming your booking and sending confirmation email...
+              </p>
+              <p className="text-sm text-gray-500">
+                Please wait, this may take a few seconds.
+              </p>
+              <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-xs text-blue-700">
+                  💡 Do not close this page or refresh your browser.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto">
         <div className="bg-white border border-neutral-200 shadow-lg rounded-2xl p-6 md:p-8">
           <div className="mb-6">
@@ -311,6 +342,7 @@ export default function PaymentPage() {
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
               isCartBooking={isCartBooking}
+              confirmingBooking={confirmingBooking}
             />
           </Elements>
 

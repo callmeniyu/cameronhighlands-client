@@ -385,11 +385,11 @@ export default function UserInfoPage() {
                       disabled={loadingCountries}
                     >
                       <option value="">
-                        {loadingCountries ? "Loading..." : "Code"}
+                        {loadingCountries ? "Loading..." : "Country"}
                       </option>
                       {countries.map((country) => (
                         <option key={country.cca2} value={country.callingCode}>
-                          {country.callingCode} {country.name}
+                          {country.name} {country.callingCode}
                         </option>
                       ))}
                     </select>
@@ -407,9 +407,7 @@ export default function UserInfoPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder={
-                        countryCode
-                          ? "12-345 6789"
-                          : "Select country code first"
+                        countryCode ? "12-345 6789" : "Select country first"
                       }
                       disabled={!countryCode}
                       className={`w-full bg-transparent outline-none focus:ring-0 focus:outline-none focus:shadow-none text-text-primary ${
@@ -422,8 +420,7 @@ export default function UserInfoPage() {
                 </div>
                 {!countryCode && (
                   <p className="text-xs text-amber-600 mt-1">
-                    Please select a country code before entering your phone
-                    number
+                    Please select a country before entering your phone number
                   </p>
                 )}
               </label>

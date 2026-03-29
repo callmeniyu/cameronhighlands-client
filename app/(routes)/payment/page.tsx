@@ -174,29 +174,50 @@ export default function PaymentPage() {
         bookingData: bookingData,
       });
 
-      if (response.success && response.data) {
-        console.log(
-          "[PAYMENT_PAGE] Booking created successfully:",
-          response.data.bookingIds,
-        );
-
-        showToast({
-          type: "success",
-          title: "Payment Successful!",
-          message: isCartBooking
-            ? `${response.data.totalBookings} bookings created successfully`
-            : "Your booking has been confirmed",
-        });
-
-        // Redirect to confirmation page
-        if (isCartBooking) {
-          router.push(
-            `/booking/cart-confirmation?bookings=${response.data.bookingIds.join(
-              ",",
-            )}`,
+      if (response.success) {
+        // Check if webhook is still processing (delayed response)
+        if (response.delayed) {
+          console.log(
+            "[PAYMENT_PAGE] Webhook delayed, showing success message",
           );
-        } else {
-          router.push(`/booking/confirmation/${response.data.bookingIds[0]}`);
+
+          showToast({
+            type: "success",
+            title: "Payment Successful!",
+            message:
+              "Your booking is being confirmed. You'll receive an email shortly.",
+          });
+
+          // Redirect to home or a "processing" page
+          router.push("/?booking=processing");
+          return;
+        }
+
+        // Normal flow - booking created successfully
+        if (response.data) {
+          console.log(
+            "[PAYMENT_PAGE] Booking created successfully:",
+            response.data.bookingIds,
+          );
+
+          showToast({
+            type: "success",
+            title: "Payment Successful!",
+            message: isCartBooking
+              ? `${response.data.totalBookings} bookings created successfully`
+              : "Your booking has been confirmed",
+          });
+
+          // Redirect to confirmation page
+          if (isCartBooking) {
+            router.push(
+              `/booking/cart-confirmation?bookings=${response.data.bookingIds.join(
+                ",",
+              )}`,
+            );
+          } else {
+            router.push(`/booking/confirmation/${response.data.bookingIds[0]}`);
+          }
         }
       } else {
         throw new Error(

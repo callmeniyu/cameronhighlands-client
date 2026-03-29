@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   FiUser,
   FiMail,
@@ -35,6 +35,9 @@ export default function UserInfoPage() {
   const [countryCode, setCountryCode] = useState("");
   const [phone, setPhone] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "commercepay">(
+    "stripe",
+  );
 
   const [pickupOptions, setPickupOptions] = useState<string[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -201,7 +204,7 @@ export default function UserInfoPage() {
   const priceNum = booking.totalPrice ? booking.totalPrice : 0;
   const finalPrice = priceNum;
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     // Validation
     if (!fullName || !email || !countryCode || !phone) {
       showToast({
@@ -280,11 +283,31 @@ export default function UserInfoPage() {
 
     const encodedBookingData = encodeURIComponent(JSON.stringify(bookingData));
 
-    // Pass final amount (after discount)
-    router.push(
-      `/payment?bookingData=${encodedBookingData}&amount=${finalPrice}`,
-    );
-  };
+    // Route to selected payment gateway
+    if (paymentMethod === "commercepay") {
+      router.push(
+        `/payment-commercepay?booking=${encodedBookingData}&amount=${finalPrice}`,
+      );
+    } else {
+      // Default to Stripe
+      router.push(
+        `/payment?bookingData=${encodedBookingData}&amount=${finalPrice}`,
+      );
+    }
+  }, [
+    fullName,
+    email,
+    countryCode,
+    phone,
+    pickupLocation,
+    pickupOptions,
+    booking,
+    priceNum,
+    finalPrice,
+    paymentMethod,
+    router,
+    showToast,
+  ]);
 
   // Format Date for Display
   const displayDate = booking.date
@@ -446,7 +469,50 @@ export default function UserInfoPage() {
               </label>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 justify-between pt-2">
+            {/* Payment Method Selection */}
+            <div className="mt-6 pt-6 border-t border-neutral-200 space-y-3">
+              <label className="block text-sm font-semibold text-gray-900">
+                Payment Method
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label
+                  className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                    paymentMethod === "stripe"
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value="stripe"
+                    checked={paymentMethod === "stripe"}
+                    onChange={() => setPaymentMethod("stripe")}
+                    className="mr-2 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium">Stripe</span>
+                </label>
+                {/* <label
+                  className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                    paymentMethod === "commercepay"
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value="commercepay"
+                    checked={paymentMethod === "commercepay"}
+                    onChange={() => setPaymentMethod("commercepay")}
+                    className="mr-2 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium">CommercePay</span>
+                </label> */}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 justify-between pt-4">
               <button
                 onClick={handleNext}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-dark transition-colors"

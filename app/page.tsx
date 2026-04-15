@@ -298,6 +298,7 @@ export default function Home() {
                 label={tour.label || undefined}
                 category={tour.type}
                 bookedCount={tour.bookedCount}
+                type={tour.type}
               />
             ))}
           </div>

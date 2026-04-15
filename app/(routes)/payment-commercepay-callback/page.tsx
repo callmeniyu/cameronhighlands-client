@@ -24,8 +24,18 @@ export default function CommercePayCallbackPage() {
   useEffect(() => {
     const processCallback = async () => {
       try {
-        const reference = searchParams?.get("reference");
-        const transactionNumber = searchParams?.get("transactionNumber") || "";
+        const reference =
+          searchParams?.get("reference") ||
+          searchParams?.get("referenceCode") ||
+          searchParams?.get("reference_code") ||
+          "";
+        const transactionNumber =
+          searchParams?.get("transactionNumber") ||
+          searchParams?.get("transactionNo") ||
+          searchParams?.get("transaction_number") ||
+          searchParams?.get("txnNumber") ||
+          searchParams?.get("txnRef") ||
+          "";
 
         if (!reference) {
           setStatus("error");
@@ -33,16 +43,24 @@ export default function CommercePayCallbackPage() {
           return;
         }
 
-        // First, handle the callback with backend
-        const callbackResponse = await commercePayApi.handleCallback(
-          transactionNumber,
-          reference,
-        );
+        let callbackResponse = { success: true, message: "" } as any;
 
-        if (!callbackResponse.success) {
-          setStatus("error");
-          setError(callbackResponse.message || "Failed to process callback");
-          return;
+        if (transactionNumber) {
+          // First, handle the callback with backend if transaction number is available
+          callbackResponse = await commercePayApi.handleCallback(
+            transactionNumber,
+            reference,
+          );
+
+          if (!callbackResponse.success) {
+            setStatus("error");
+            setError(callbackResponse.message || "Failed to process callback");
+            return;
+          }
+        } else {
+          console.warn(
+            "CommercePay callback returned no transactionNumber, falling back to status polling",
+          );
         }
 
         // Poll for final status
@@ -72,7 +90,11 @@ export default function CommercePayCallbackPage() {
                       body: JSON.stringify({
                         ...bookingInfo,
                         paymentInfo: {
-                          amount: bookingInfo.amount,
+                          amount:
+                            bookingInfo.amount ||
+                            bookingInfo.totalPrice ||
+                            bookingInfo.total ||
+                            0,
                           bankCharge: 0,
                           currency: "MYR",
                           paymentStatus: "succeeded", // Mark as succeeded after payment
@@ -91,6 +113,15 @@ export default function CommercePayCallbackPage() {
                       bookingResult.error,
                     );
                     // Continue anyway since payment was successful
+                  } else {
+                    // Update reference context if booking provides it
+                    console.log("Booking created successfully:", bookingResult);
+                    if (bookingResult.data && bookingResult.data._id) {
+                      sessionStorage.setItem(
+                        "lastBookingId",
+                        bookingResult.data._id,
+                      );
+                    }
                   }
                 } catch (err) {
                   console.error("Error creating booking after payment:", err);
@@ -121,7 +152,13 @@ export default function CommercePayCallbackPage() {
             setMessage("Payment Successful!");
             // Redirect to booking confirmation after 2 seconds
             setTimeout(() => {
-              router.push(`/booking-confirmation?reference=${reference}`);
+              const lastBookingId = sessionStorage.getItem("lastBookingId");
+              if (lastBookingId) {
+                router.push(`/booking/confirmation/${lastBookingId}`);
+              } else {
+                // fallback if id wasn't captured but payment was successful
+                router.push(`/bookings`);
+              }
             }, 2000);
             break;
 
@@ -184,82 +221,32 @@ export default function CommercePayCallbackPage() {
   if (status === "success") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 py-12 px-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-          {/* Success Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-green-100 rounded-full animate-pulse"></div>
-              <div className="relative flex items-center justify-center w-20 h-20 bg-green-100 rounded-full">
-                <svg
-                  className="w-10 h-10 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-            </div>
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-green-100 rounded-full">
+            <svg
+              className="w-8 h-8 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
           </div>
-
-          {/* Message */}
-          <h1 className="text-2xl font-bold text-center text-gray-900 mb-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-3">
             Payment Successful!
-          </h1>
-          <p className="text-center text-gray-600 mb-4">
-            Your booking has been confirmed.
-          </p>
-
-          {/* Details */}
-          {details && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              {details.amount && (
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Amount Paid</span>
-                  <span className="font-semibold text-gray-900">
-                    {commercePayApi.formatAmount(details.amount)}
-                  </span>
-                </div>
-              )}
-              {details.paymentChannel && (
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Payment Method</span>
-                  <span className="font-semibold text-gray-900">
-                    {details.paymentChannel}
-                  </span>
-                </div>
-              )}
-              {details.bookingStatus && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <span className="font-semibold text-green-600 capitalize">
-                    {details.bookingStatus}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-700">
-              A confirmation email has been sent to your email address. Keep it
-              safe for your records.
-            </p>
+          </h2>
+          <div className="flex items-center justify-center space-x-2 text-gray-600 mb-2">
+            <div className="w-5 h-5 border-2 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+            <span>Generating your confirmation ticket...</span>
           </div>
-
-          {/* Button */}
-          <button
-            onClick={() => router.push("/booking-confirmation")}
-            className="w-full py-3 px-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-          >
-            View Booking Details
-          </button>
+          <p className="text-sm text-gray-500">
+            Please wait while we redirect you.
+          </p>
         </div>
       </div>
     );

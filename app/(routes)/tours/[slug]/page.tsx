@@ -388,7 +388,9 @@ export default function TourDetailPage() {
                 <div className="flex items-center gap-2">
                   <FiUsers className="text-primary text-lg" />
                   <span>
-                    {tour.minimumPerson}-{tour.maximumPerson || 50} people
+                    {tour.type === "private"
+                      ? `${tour.seatCapacity || tour.maximumPerson || 50} seats`
+                      : `${tour.minimumPerson}-${tour.maximumPerson || 50} people`}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -645,7 +647,8 @@ export default function TourDetailPage() {
                   )}
 
                   {/* Show minimum person info if a slot is selected */}
-                  {selectedTime &&
+                  {tour?.type !== "private" &&
+                    selectedTime &&
                     timeSlots.find((s) => s.time === selectedTime) && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-xs text-blue-800">
@@ -853,7 +856,9 @@ export default function TourDetailPage() {
                 <div className="flex items-center gap-2">
                   <FiUsers className="text-primary text-lg" />
                   <span>
-                    {tour.minimumPerson}-{tour.maximumPerson || 50} people
+                    {tour.type === "private"
+                      ? `${tour.seatCapacity || tour.maximumPerson || 50} seats`
+                      : `${tour.minimumPerson}-${tour.maximumPerson || 50} people`}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1182,7 +1187,8 @@ export default function TourDetailPage() {
                   )}
 
                   {/* Show minimum person info if a slot is selected */}
-                  {selectedTime &&
+                  {tour?.type !== "private" &&
+                    selectedTime &&
                     timeSlots.find((s) => s.time === selectedTime) && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-xs text-blue-800">

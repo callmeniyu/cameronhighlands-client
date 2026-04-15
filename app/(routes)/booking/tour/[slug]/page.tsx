@@ -81,7 +81,7 @@ export default function BookingInfoPage() {
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/timeslots/available?packageType=tour&packageId=${tourId}&date=${dateString}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/timeslots/available?packageType=tour&packageId=${tourId}&date=${dateString}`,
         );
         const data = await response.json();
 
@@ -90,7 +90,7 @@ export default function BookingInfoPage() {
           // Check if there are any available slots
           const hasAvailableSlots = slots.some(
             (slot: TimeSlot) =>
-              slot.isAvailable && slot.capacity - slot.bookedCount > 0
+              slot.isAvailable && slot.capacity - slot.bookedCount > 0,
           );
 
           if (hasAvailableSlots) {
@@ -116,7 +116,7 @@ export default function BookingInfoPage() {
     const fetchServerDateTime = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/timeslots/server-datetime`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/timeslots/server-datetime`,
         );
         const data = await response.json();
         console.log("Server DateTime API Response:", data); // Debug log
@@ -140,7 +140,7 @@ export default function BookingInfoPage() {
     const getTourDetails = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/tours/slug/${slug}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/tours/slug/${slug}`,
         );
         const data = await response.json();
 
@@ -172,7 +172,7 @@ export default function BookingInfoPage() {
               if (isObjectId) {
                 try {
                   const vehicleResponse = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/vehicles/${vehicleIdentifier}`
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/vehicles/${vehicleIdentifier}`,
                   );
                   const vehicleData = await vehicleResponse.json();
                   if (vehicleData && vehicleData.success && vehicleData.data) {
@@ -187,7 +187,7 @@ export default function BookingInfoPage() {
               if (!resolved) {
                 try {
                   const listRes = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/vehicles`
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/vehicles`,
                   );
                   const listData = await listRes.json();
                   if (
@@ -199,7 +199,7 @@ export default function BookingInfoPage() {
                       (v: any) =>
                         v.name === vehicleIdentifier ||
                         v._id === vehicleIdentifier ||
-                        String(v._id) === vehicleIdentifier
+                        String(v._id) === vehicleIdentifier,
                     );
                     applyVehicle(found);
                   }
@@ -225,7 +225,7 @@ export default function BookingInfoPage() {
           // Private tours: 8 adults (vehicle booking), Regular tours: 0 adults (user must select)
           const initialAdults = tour.type === "private" ? 8 : 0;
           console.log(
-            `🎯 Setting initial adults count to: ${initialAdults} (tour type: ${tour.type})`
+            `🎯 Setting initial adults count to: ${initialAdults} (tour type: ${tour.type})`,
           );
           setAdults(initialAdults);
           setTotalGuests(initialAdults);
@@ -256,7 +256,7 @@ export default function BookingInfoPage() {
   const fetchTimeSlots = async () => {
     if (!tourDetails?._id || !selectedDate) {
       console.log(
-        `⏸️ fetchTimeSlots skipped - no tour details ID or no date selected`
+        `⏸️ fetchTimeSlots skipped - no tour details ID or no date selected`,
       );
       return;
     }
@@ -266,7 +266,7 @@ export default function BookingInfoPage() {
         tourDetails._id
       } on date ${selectedDate.toDateString()}, current selectedTime: ${
         selectedTime || "none"
-      }`
+      }`,
     );
 
     try {
@@ -280,7 +280,7 @@ export default function BookingInfoPage() {
         String(selectedDate.getDate()).padStart(2, "0");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/timeslots/available?packageType=tour&packageId=${tourDetails._id}&date=${dateString}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/timeslots/available?packageType=tour&packageId=${tourDetails._id}&date=${dateString}`,
       );
       const data = await response.json();
 
@@ -291,10 +291,10 @@ export default function BookingInfoPage() {
         // Debug: Log slot data to verify minimumPerson values being used for validation
         slots.forEach((slot: TimeSlot) => {
           console.log(
-            `🎯 Frontend Slot ${slot.time}: bookedCount=${slot.bookedCount}, minimumPerson=${slot.minimumPerson}, currentMinimum=${slot.currentMinimum}`
+            `🎯 Frontend Slot ${slot.time}: bookedCount=${slot.bookedCount}, minimumPerson=${slot.minimumPerson}, currentMinimum=${slot.currentMinimum}`,
           );
           console.log(
-            `   ✅ Using minimumPerson (${slot.minimumPerson}) for validation logic`
+            `   ✅ Using minimumPerson (${slot.minimumPerson}) for validation logic`,
           );
         });
 
@@ -304,25 +304,25 @@ export default function BookingInfoPage() {
         if (slots.length > 0 && !selectedTime) {
           const firstAvailableSlot = slots.find(
             (slot: TimeSlot) =>
-              slot.isAvailable && slot.capacity - slot.bookedCount > 0
+              slot.isAvailable && slot.capacity - slot.bookedCount > 0,
           );
 
           if (firstAvailableSlot) {
             console.log(
-              `🎯 Auto-selecting first available time slot: ${firstAvailableSlot.time}`
+              `🎯 Auto-selecting first available time slot: ${firstAvailableSlot.time}`,
             );
             setSelectedTime(firstAvailableSlot.time);
           }
         }
 
         console.log(
-          `📋 Loaded ${slots.length} time slots. Current selectedTime: "${selectedTime}"`
+          `📋 Loaded ${slots.length} time slots. Current selectedTime: "${selectedTime}"`,
         );
 
         // Clear selected time if it's no longer available
         if (selectedTime) {
           const currentSlot = slots.find(
-            (slot: TimeSlot) => slot.time === selectedTime
+            (slot: TimeSlot) => slot.time === selectedTime,
           );
           if (
             !currentSlot ||
@@ -330,7 +330,7 @@ export default function BookingInfoPage() {
             currentSlot.capacity - currentSlot.bookedCount <= 0
           ) {
             console.log(
-              `🧹 Clearing unavailable selected time: ${selectedTime}`
+              `🧹 Clearing unavailable selected time: ${selectedTime}`,
             );
             setSelectedTime("");
           }
@@ -582,11 +582,13 @@ export default function BookingInfoPage() {
       packageType: "tour",
       image: tourDetails.image || "",
       transport: tourDetails.type === "private" ? "Private" : undefined,
-      // Set pickup locations (HTML content from pickupLocation field)
-      pickupLocations: tourDetails.details.pickupLocation || "",
-      // Set pickup guidelines/description (from pickupGuidelines or note field)
+      // Set pickup locations from tour details
+      pickupLocations: tourDetails.details.pickupLocations?.join(", ") || "",
+      // Set pickup guidelines/description from tour details notes
       pickupDescription:
-        tourDetails.details.pickupGuidelines || tourDetails.details.note || "",
+        tourDetails.details.pickupGuidelines ||
+        tourDetails.details.notes?.join("\n") ||
+        "",
       // Add vehicle information for private tours
       vehicleName:
         tourDetails.type === "private" ? vehicleDetails?.name : undefined,
@@ -658,8 +660,8 @@ export default function BookingInfoPage() {
                         selectedTime === slot.time
                           ? "bg-primary_green text-white border-primary_green"
                           : isSlotAvailable
-                          ? "bg-white border-gray-200 hover:border-primary_green"
-                          : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+                            ? "bg-white border-gray-200 hover:border-primary_green"
+                            : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
                       }`}
                       onClick={() =>
                         isSlotAvailable && setSelectedTime(slot.time)
@@ -748,7 +750,7 @@ export default function BookingInfoPage() {
                 {/* Show minimum requirement for selected slot */}
                 {(() => {
                   const selectedSlot = timeSlots.find(
-                    (slot) => slot.time === selectedTime
+                    (slot) => slot.time === selectedTime,
                   );
                   if (selectedSlot) {
                     const isFirstBooking = selectedSlot.bookedCount === 0;
@@ -873,7 +875,7 @@ export default function BookingInfoPage() {
                           </span>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               </>

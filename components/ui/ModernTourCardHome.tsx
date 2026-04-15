@@ -21,6 +21,7 @@ type ModernTourCardHomeProps = {
   label?: string;
   category: string;
   bookedCount?: number | string;
+  type?: string;
 };
 
 export default function ModernTourCardHome({
@@ -37,6 +38,7 @@ export default function ModernTourCardHome({
   label,
   category,
   bookedCount,
+  type,
 }: ModernTourCardHomeProps) {
   const [actualReviewCount, setActualReviewCount] = useState(0);
   const [combinedReviewCount, setCombinedReviewCount] = useState(
@@ -155,7 +157,9 @@ export default function ModernTourCardHome({
                 <span className="text-2xl font-bold text-primary">
                   RM {price}
                 </span>
-                <span className="text-text-secondary text-xs">/person</span>
+                <span className="text-text-secondary text-xs">
+                  {type?.toLowerCase() === "private" ? "/group" : "/person"}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-text-secondary">
                 <span>${convertToUSD(price)}</span>

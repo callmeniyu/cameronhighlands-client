@@ -36,9 +36,8 @@ export default function UserInfoPage() {
   const [phone, setPhone] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "commercepay">(
-    "commercepay",
+    "stripe",
   );
-  const [showOtherPaymentOptions, setShowOtherPaymentOptions] = useState(false);
 
   const [pickupOptions, setPickupOptions] = useState<string[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -475,10 +474,10 @@ export default function UserInfoPage() {
               <label className="block text-sm font-semibold text-gray-900">
                 Payment Method
               </label>
-              <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 <label
-                  className={`relative w-full flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    paymentMethod === "commercepay"
+                  className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                    paymentMethod === "stripe"
                       ? "border-blue-600 bg-blue-50"
                       : "border-gray-200 bg-white hover:border-gray-300"
                   }`}
@@ -486,42 +485,13 @@ export default function UserInfoPage() {
                   <input
                     type="radio"
                     name="payment-method"
-                    value="commercepay"
-                    checked={paymentMethod === "commercepay"}
-                    onChange={() => setPaymentMethod("commercepay")}
+                    value="stripe"
+                    checked={paymentMethod === "stripe"}
+                    onChange={() => setPaymentMethod("stripe")}
                     className="mr-2 cursor-pointer"
                   />
-                  <span className="text-sm font-medium">CommercePay</span>
+                  <span className="text-sm font-medium">Stripe</span>
                 </label>
-
-                {!showOtherPaymentOptions ? (
-                  <h6
-                    onClick={() => setShowOtherPaymentOptions(true)}
-                    className="inline-flex underline items-center justify-center w-full px-4 py-3 text-sm font-semibold text-gray-700 cursor-pointer"
-                  >
-                    Other payment options
-                  </h6>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <label
-                      className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                        paymentMethod === "stripe"
-                          ? "border-blue-600 bg-blue-50"
-                          : "border-gray-200 bg-white hover:border-gray-300"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="payment-method"
-                        value="stripe"
-                        checked={paymentMethod === "stripe"}
-                        onChange={() => setPaymentMethod("stripe")}
-                        className="mr-2 cursor-pointer"
-                      />
-                      <span className="text-sm font-medium">Stripe</span>
-                    </label>
-                  </div>
-                )}
               </div>
             </div>
 

@@ -18,27 +18,24 @@ export interface ApiResponse<T = any> {
 /**
  * Payment Session Response
  */
-export interface CommercePayChannel {
-  id: number;
-  name?: string;
-  type?: number;
-  isProviderHostChannel?: boolean;
-  acceptedCurrencyCode?: string;
-  currencies?: Array<{ acceptedCurrencyCode?: string }>; 
-  imageUrl?: string;
-  groupName?: string;
-  [key: string]: any;
-}
-
 export interface PaymentSessionResponse {
   redirectUrl: string;
-  clientScript?: string;
-  redirectionType?: number;
-  channelId?: number;
-  providerChannelId?: string;
   referenceCode: string;
   sessionId: string;
   expiresAt: string;
+}
+
+export interface CommercePayChannel {
+  channelId?: string | number;
+  id?: string | number;
+  value?: string | number;
+  providerChannelId?: string;
+  providerChannelCode?: string;
+  providerId?: string;
+  displayName?: string;
+  channelName?: string;
+  name?: string;
+  [key: string]: any;
 }
 
 /**
@@ -89,17 +86,12 @@ export class CommercePayApi {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-
-        if (this.apiKey) {
-          headers['x-api-key'] = this.apiKey;
-        }
-
         const response = await fetch(url, {
           method,
-          headers,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': this.apiKey,
+          },
           body: body ? JSON.stringify(body) : undefined,
           signal: controller.signal,
         });
@@ -163,8 +155,10 @@ export class CommercePayApi {
     customerEmail: string;
     amount: number;
     currency?: string;
-    channelId?: number;
+    channelId?: string | number;
     providerChannelId?: string;
+    packageType?: string;
+    packageId?: string;
     [key: string]: any;
   }): Promise<ApiResponse<PaymentSessionResponse>> {
     try {
@@ -176,16 +170,28 @@ export class CommercePayApi {
         throw new Error('Valid amount is required');
       }
 
+      const { channelId, providerChannelId, ...bookingDataWithoutChannels } = bookingData;
+
+      const requestBody: any = {
+        bookingData: bookingDataWithoutChannels,
+        amount: bookingData.amount,
+        currency: bookingData.currency || 'MYR',
+      };
+
+      if (channelId !== undefined && channelId !== null && String(channelId).trim() !== '') {
+        const rawChannelId = String(channelId).trim();
+        const parsedChannelId = Number(rawChannelId);
+        requestBody.channelId = Number.isNaN(parsedChannelId) ? rawChannelId : parsedChannelId;
+      }
+
+      if (providerChannelId && String(providerChannelId).trim() !== '') {
+        requestBody.providerChannelId = providerChannelId;
+      }
+
       const response = await this.request<PaymentSessionResponse>(
         'POST',
         '/create-session',
-        {
-          bookingData,
-          amount: bookingData.amount,
-          currency: bookingData.currency || 'MYR',
-          ...(bookingData.channelId !== undefined ? { channelId: bookingData.channelId } : {}),
-          ...(bookingData.providerChannelId ? { providerChannelId: bookingData.providerChannelId } : {}),
-        },
+        requestBody,
         { retries: 2, timeout: 30000 }
       );
 
@@ -193,8 +199,8 @@ export class CommercePayApi {
         throw new Error(response.message || 'Failed to create payment session');
       }
 
-      if (!response.data?.redirectUrl && !response.data?.clientScript) {
-        throw new Error('No redirect URL or client script in response');
+      if (!response.data?.redirectUrl) {
+        throw new Error('No redirect URL in response');
       }
 
       return response;
@@ -204,6 +210,30 @@ export class CommercePayApi {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to create payment session',
         code: 'SESSION_CREATION_FAILED',
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * Fetch available payment channels by country
+   */
+  async getAvailableChannels(countryCode: string = 'MY'): Promise<ApiResponse<CommercePayChannel[]>> {
+    try {
+      const response = await this.request<CommercePayChannel[]>(
+        'GET',
+        `/channels?countryCode=${encodeURIComponent(countryCode)}`,
+        undefined,
+        { retries: 2, timeout: 20000 }
+      );
+
+      return response;
+    } catch (error) {
+      console.error('[CommercePay API] getAvailableChannels error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to fetch channels',
+        code: 'CHANNEL_FETCH_FAILED',
         error: error instanceof Error ? error.message : String(error),
       };
     }
@@ -265,30 +295,6 @@ export class CommercePayApi {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to verify payment status',
         code: 'STATUS_VERIFICATION_FAILED',
-        error: error instanceof Error ? error.message : String(error),
-      };
-    }
-  }
-
-  /**
-   * Get available CommercePay payment channels
-   */
-  async getChannels(countryCode: string = 'MY'): Promise<ApiResponse<CommercePayChannel[]>> {
-    try {
-      const response = await this.request<CommercePayChannel[]>(
-        'GET',
-        `/channels?countryCode=${encodeURIComponent(countryCode)}`,
-        undefined,
-        { retries: 2, timeout: 15000 }
-      );
-
-      return response;
-    } catch (error) {
-      console.error('[CommercePay API] getChannels error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to load channels',
-        code: 'CHANNELS_LOAD_FAILED',
         error: error instanceof Error ? error.message : String(error),
       };
     }
@@ -416,10 +422,11 @@ export function getCommercePayApi(): CommercePayApi {
 export const commercePayApi = {
   createSession: (data: Parameters<CommercePayApi['createPaymentSession']>[0]) =>
     getCommercePayApi().createPaymentSession(data),
+  getAvailableChannels: (countryCode?: string) =>
+    getCommercePayApi().getAvailableChannels(countryCode),
   handleCallback: (transactionNumber: string, referenceCode: string) =>
     getCommercePayApi().handlePaymentCallback(transactionNumber, referenceCode),
   checkStatus: (referenceCode: string) => getCommercePayApi().verifyPaymentStatus(referenceCode),
-  getChannels: (countryCode: string = 'MY') => getCommercePayApi().getChannels(countryCode),
   cancel: (referenceCode: string) => getCommercePayApi().cancelPayment(referenceCode),
   pollStatus: (
     referenceCode: string,

@@ -30,12 +30,11 @@ const ALLOWED_PREFIXES = [
   "/recommendations",
   "/user-info",
   "/confirmation",
+  "/contact-us",
 ];
 
 // Additional explicitly allowed exact paths
-const ALLOWED_EXACT = [
-  "/",
-];
+const ALLOWED_EXACT = ["/"];
 
 export function middleware(req: NextRequest) {
   try {
@@ -47,22 +46,28 @@ export function middleware(req: NextRequest) {
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
-    
-    if (pathname === "/service-page/private-guided-mossy-forest-highlands-day-trip") {
+
+    if (
+      pathname ===
+      "/service-page/private-guided-mossy-forest-highlands-day-trip"
+    ) {
       url.pathname = "/tours/private-full-day-highlands-mossy-forest-discovery";
       return NextResponse.redirect(url);
     }
-    
-    if (pathname === "/service-page/full-day-private-land-rover-tour-your-own-group") {
+
+    if (
+      pathname ===
+      "/service-page/full-day-private-land-rover-tour-your-own-group"
+    ) {
       url.pathname = "/tours/mossy-forest-full-day-highland-discovery";
       return NextResponse.redirect(url);
     }
-    
+
     if (pathname === "/service-page/private-highland-escape") {
       url.pathname = "/tours/private-full-day-highlands-mossy-forest-discovery";
       return NextResponse.redirect(url);
     }
-    
+
     if (pathname === "/service-page/half-day-land-rover-tour-to-mossy-forest") {
       url.pathname = "/tours/half-day-mossy-forest-land-rover-trip";
       return NextResponse.redirect(url);
@@ -97,7 +102,7 @@ export function middleware(req: NextRequest) {
     }
 
     // Allow files with extensions (images, css, js, etc.)
-    if (pathname.includes('.')) {
+    if (pathname.includes(".")) {
       return NextResponse.next();
     }
 
@@ -111,7 +116,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   } catch (error) {
     // If middleware fails, just continue to the page
-    console.error('Middleware error:', error);
+    console.error("Middleware error:", error);
     return NextResponse.next();
   }
 }
@@ -125,6 +130,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

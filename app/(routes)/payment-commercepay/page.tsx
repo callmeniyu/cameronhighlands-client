@@ -2,13 +2,28 @@
 
 /**
  * CommercePay Payment Page
- * Direct integration checkout that displays channel selection and embeds the payment experience.
+ * Handles payment initiation and callback
  */
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { commercePayApi } from "@/lib/commercepayApi";
 import Toast from "@/components/ui/Toast";
+
+interface ChannelItem {
+  channelId?: string | number;
+  id?: string | number;
+  value?: string | number;
+  providerChannelId?: string;
+  providerChannelCode?: string;
+  providerId?: string;
+  displayName?: string;
+  channelName?: string;
+  name?: string;
+  providerName?: string;
+  providerChannelName?: string;
+  [key: string]: any;
+}
 
 interface BookingData {
   bookingId?: string;
@@ -28,23 +43,10 @@ interface BookingData {
   [key: string]: any;
 }
 
-interface CommercePayChannel {
-  id: number;
-  name?: string;
-  type?: number;
-  isProviderHostChannel?: boolean;
-  acceptedCurrencyCode?: string;
-  currencies?: Array<{ acceptedCurrencyCode?: string }>;
-  imageUrl?: string;
-  groupName?: string;
-  [key: string]: any;
-}
-
 type PaymentStatus =
   | "idle"
   | "loading"
-  | "embedded"
-  | "iframe"
+  | "redirecting"
   | "processing"
   | "success"
   | "error";
@@ -56,18 +58,15 @@ export default function CommercePayPaymentPage() {
   const [status, setStatus] = useState<PaymentStatus>("idle");
   const [error, setError] = useState<string>("");
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
-  const [channels, setChannels] = useState<CommercePayChannel[]>([]);
-  const [selectedChannelId, setSelectedChannelId] = useState<number | null>(
-    null,
-  );
-  const [embeddedScript, setEmbeddedScript] = useState<string>("");
-  const [iframeUrl, setIframeUrl] = useState<string>("");
-  const [loadingChannels, setLoadingChannels] = useState<boolean>(true);
-  const [channelError, setChannelError] = useState<string>("");
+  const [channels, setChannels] = useState<ChannelItem[]>([]);
+  const [selectedChannelId, setSelectedChannelId] = useState<string>("");
+  const [channelsLoading, setChannelsLoading] = useState<boolean>(false);
+  const [channelsError, setChannelsError] = useState<string>("");
   const [toasts, setToasts] = useState<
     Array<{ id: string; message: string; type: "success" | "error" | "info" }>
   >([]);
 
+  // Get booking data from URL params or session storage
   useEffect(() => {
     try {
       const bookingJson =
@@ -80,11 +79,13 @@ export default function CommercePayPaymentPage() {
       }
 
       const data = JSON.parse(bookingJson) as BookingData;
+
       const amountParam = searchParams?.get("amount");
       const parsedAmount = amountParam
         ? parseFloat(amountParam)
         : data.total || data.amount;
 
+      // Validate booking data
       if (!parsedAmount || parsedAmount <= 0) {
         setError("Invalid booking data: Missing amount");
         setStatus("error");
@@ -102,86 +103,60 @@ export default function CommercePayPaymentPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!bookingData) {
-      return;
-    }
+    const fetchChannels = async () => {
+      if (!bookingData) return;
 
-    const loadChannels = async () => {
-      setLoadingChannels(true);
-      setChannelError("");
+      setChannelsLoading(true);
+      setChannelsError("");
 
       try {
-        const response = await commercePayApi.getChannels("MY");
+        const response = await commercePayApi.getAvailableChannels("MY");
+
         if (!response.success) {
-          throw new Error(response.message || "Failed to load channels");
+          throw new Error(
+            response.message || "Failed to load payment channels",
+          );
         }
 
-        const channelList = Array.isArray(response.data)
-          ? response.data
-          : (response.data as any)?.result || [];
+        const list = Array.isArray(response.data) ? response.data : [];
+        setChannels(list);
 
-        setChannels(channelList);
-        if (channelList.length === 1) {
-          setSelectedChannelId(channelList[0].id);
+        if (list.length > 0) {
+          const first = list[0];
+          const firstId = String(
+            first?.channelId ?? first?.id ?? first?.value ?? "",
+          ).trim();
+          setSelectedChannelId(firstId);
         }
       } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Unable to load payment channels";
-        console.error("CommercePay channels error:", err);
-        setChannelError(message);
-        addToast(message, "error");
+        const msg =
+          err instanceof Error ? err.message : "Unable to load channels";
+        setChannelsError(msg);
       } finally {
-        setLoadingChannels(false);
+        setChannelsLoading(false);
       }
     };
 
-    loadChannels();
+    fetchChannels();
   }, [bookingData]);
 
-  useEffect(() => {
-    if (!embeddedScript) {
-      return;
-    }
-
-    const container = document.getElementById("commercepay-embed-container");
-    if (!container) {
-      return;
-    }
-
-    container.innerHTML = embeddedScript;
-
-    const scripts = Array.from(container.querySelectorAll("script"));
-    scripts.forEach((oldScript) => {
-      const newScript = document.createElement("script");
-      Array.from(oldScript.attributes).forEach((attr) =>
-        newScript.setAttribute(attr.name, attr.value),
-      );
-      newScript.text = oldScript.textContent || "";
-      oldScript.replaceWith(newScript);
-    });
-  }, [embeddedScript]);
-
+  // Add toast notification
   const addToast = useCallback(
     (message: string, type: "success" | "error" | "info" = "info") => {
       const id = Date.now().toString();
       setToasts((prev) => [...prev, { id, message, type }]);
+
       setTimeout(() => {
-        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+        setToasts((prev) => prev.filter((t) => t.id !== id));
       }, 5000);
     },
     [],
   );
 
+  // Initiate payment
   const initiatePayment = useCallback(async () => {
     if (!bookingData) {
       setError("No booking data available");
-      return;
-    }
-
-    if (channels.length > 0 && selectedChannelId === null) {
-      setError("Please select a payment method before continuing.");
       return;
     }
 
@@ -189,11 +164,58 @@ export default function CommercePayPaymentPage() {
       setStatus("loading");
       setError("");
 
-      const response = await commercePayApi.createSession({
+      // For CommercePay, DO NOT create the booking yet
+      // The booking will be created only after successful payment via webhook/callback
+      // Generate a temporary reference code for the payment session
+      const tempReferenceCode = `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Create payment session WITHOUT a bookingId first
+      // The payment session itself acts as the reservation holder
+      const activeChannel = channels.find((channel) => {
+        const channelCandidate = String(
+          channel?.channelId ?? channel?.id ?? channel?.value ?? "",
+        ).trim();
+        return channelCandidate === selectedChannelId;
+      });
+
+      const rawChannelIdToSend = String(
+        activeChannel?.channelId ??
+          activeChannel?.id ??
+          activeChannel?.value ??
+          selectedChannelId ??
+          "",
+      ).trim();
+
+      const parsedChannelId = Number(rawChannelIdToSend);
+      const channelIdToSend = Number.isNaN(parsedChannelId)
+        ? rawChannelIdToSend
+        : parsedChannelId;
+
+      const providerChannelIdToSend = String(
+        activeChannel?.providerChannelId ??
+          activeChannel?.providerChannelCode ??
+          activeChannel?.providerId ??
+          "",
+      ).trim();
+
+      const effectiveBookingData = {
         ...bookingData,
-        bookingId:
-          bookingData.bookingId ||
-          `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        packageType: bookingData.packageType || bookingData.type,
+        packageId: bookingData.packageId || bookingData.id,
+      };
+
+      if (
+        !effectiveBookingData.packageType ||
+        !effectiveBookingData.packageId
+      ) {
+        throw new Error(
+          "Booking data is incomplete. Please restart checkout and try again.",
+        );
+      }
+
+      const response = await commercePayApi.createSession({
+        ...effectiveBookingData,
+        bookingId: tempReferenceCode,
         packageName:
           bookingData.title || bookingData.packageName || "Tour Booking",
         customerName:
@@ -204,45 +226,35 @@ export default function CommercePayPaymentPage() {
           bookingData.contactInfo?.email || bookingData.customerEmail || "",
         amount: bookingData.amount || 0,
         currency: "MYR",
-        ...(selectedChannelId !== null ? { channelId: selectedChannelId } : {}),
+        ...(String(channelIdToSend ?? "").trim()
+          ? { channelId: channelIdToSend }
+          : {}),
+        ...(providerChannelIdToSend
+          ? { providerChannelId: providerChannelIdToSend }
+          : {}),
       });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to create payment session");
       }
 
-      const payload = response.data;
-      if (!payload) {
-        throw new Error("Invalid payment session response");
+      if (!response.data?.redirectUrl) {
+        throw new Error("No redirect URL received");
       }
 
-      sessionStorage.setItem("paymentReferenceCode", payload.referenceCode);
-
-      if (payload.clientScript) {
-        setEmbeddedScript(payload.clientScript);
-        setStatus("embedded");
-        addToast("Payment checkout has loaded inside the page.", "info");
-        return;
-      }
-
-      if (payload.redirectUrl) {
-        const popup = window.open(payload.redirectUrl, "_blank");
-        if (!popup) {
-          throw new Error(
-            "Unable to open payment page. Please allow popups and try again.",
-          );
-        }
-        setStatus("processing");
-        addToast(
-          "Payment checkout opened in a new tab. Complete the payment there.",
-          "info",
-        );
-        return;
-      }
-
-      throw new Error(
-        "CommercePay did not return usable payment instructions.",
+      // Store reference code for callback
+      sessionStorage.setItem(
+        "paymentReferenceCode",
+        response.data.referenceCode,
       );
+
+      addToast("Redirecting to payment gateway...", "info");
+      setStatus("redirecting");
+
+      // Redirect to CommercePay
+      setTimeout(() => {
+        window.location.href = response.data!.redirectUrl;
+      }, 500);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to initiate payment";
@@ -251,14 +263,72 @@ export default function CommercePayPaymentPage() {
       addToast(errorMessage, "error");
       setStatus("error");
     }
-  }, [bookingData, channels.length, selectedChannelId, addToast]);
+  }, [bookingData, channels, selectedChannelId, addToast]);
 
+  // Handle page load - if payment callback is detected, process it
+  useEffect(() => {
+    const processCallback = async () => {
+      const reference = searchParams?.get("reference");
+      const transactionNumber = searchParams?.get("transactionNumber");
+
+      if (!reference) return;
+
+      try {
+        setStatus("processing");
+
+        // Handle callback
+        const callbackResponse = await commercePayApi.handleCallback(
+          transactionNumber || "",
+          reference,
+        );
+
+        // Poll for status to ensure it's processed
+        const statusResponse = await commercePayApi.pollStatus(
+          reference,
+          10,
+          2000,
+        );
+
+        if (statusResponse.data?.status === "succeeded") {
+          setStatus("success");
+          addToast("Payment successful! Your booking is confirmed.", "success");
+
+          // Redirect to confirmation page
+          setTimeout(() => {
+            router.push(`/booking-confirmation?reference=${reference}`);
+          }, 2000);
+        } else if (statusResponse.data?.status === "failed") {
+          setError(
+            "Payment declined. Please try again or use a different payment method.",
+          );
+          addToast("Payment failed", "error");
+          setStatus("error");
+        } else {
+          setError(
+            "Payment status is pending. Please check your email for confirmation.",
+          );
+          setStatus("idle");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to process payment";
+        console.error("Payment processing error:", err);
+        setError(errorMessage);
+        addToast(errorMessage, "error");
+        setStatus("error");
+      }
+    };
+
+    processCallback();
+  }, [searchParams, router, addToast]);
+
+  // Render loading state
   if (!bookingData && status !== "error") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-blue-100 rounded-full">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
           </div>
           <p className="text-gray-600">Loading payment information...</p>
         </div>
@@ -266,6 +336,7 @@ export default function CommercePayPaymentPage() {
     );
   }
 
+  // Render error state
   if (status === "error" && !bookingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -302,24 +373,26 @@ export default function CommercePayPaymentPage() {
     );
   }
 
-  if (status === "processing" || status === "loading") {
+  // Render processing state
+  if (status === "processing" || status === "redirecting") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-blue-100 rounded-full">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
           </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            {status === "loading" ? "Preparing checkout" : "Processing payment"}
+            {status === "redirecting"
+              ? "Redirecting to Payment Gateway"
+              : "Processing Payment"}
           </h2>
-          <p className="text-gray-600">
-            Please wait while we load the payment experience.
-          </p>
+          <p className="text-gray-600">Please wait...</p>
         </div>
       </div>
     );
   }
 
+  // Render success state
   if (status === "success") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -352,16 +425,19 @@ export default function CommercePayPaymentPage() {
     );
   }
 
+  // Render payment initiation form
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
+      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Complete Payment</h1>
           <p className="text-gray-600 mt-2">
-            Secure checkout powered by CommercePay direct integration.
+            Secure payment powered by CommercePay
           </p>
         </div>
 
+        {/* Booking Summary */}
         {bookingData && (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="mb-2">
@@ -379,113 +455,107 @@ export default function CommercePayPaymentPage() {
             <div className="border-t border-gray-200 pt-2">
               <p className="text-sm text-gray-600">Total Amount</p>
               <p className="text-2xl font-bold text-blue-600">
-                RM {(bookingData.amount || 0).toFixed(2)}
+                {commercePayApi.formatAmount(bookingData.amount || 0)}
               </p>
             </div>
           </div>
         )}
 
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Choose Payment Method
-              </h2>
-              <p className="text-sm text-gray-600">
-                Select a CommercePay channel and continue without leaving the
-                site.
-              </p>
-            </div>
-          </div>
-
-          {channelError && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg">
-              {channelError}
-            </div>
-          )}
-
-          {loadingChannels ? (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-              <p className="text-gray-700">
-                Loading available payment channels...
-              </p>
-            </div>
-          ) : channels.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {channels.map((channel) => (
-                <button
-                  key={channel.id}
-                  type="button"
-                  onClick={() => setSelectedChannelId(channel.id)}
-                  className={`rounded-xl border p-4 text-left transition hover:border-blue-500 ${
-                    selectedChannelId === channel.id
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-gray-900">
-                      {channel.name || `Channel ${channel.id}`}
-                    </span>
-                    {selectedChannelId === channel.id && (
-                      <span className="text-xs text-blue-600">Selected</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    {channel.acceptedCurrencyCode ||
-                      channel.currencies?.[0]?.acceptedCurrencyCode ||
-                      "MYR"}
-                    {channel.isProviderHostChannel
-                      ? " · Provider-hosted channel"
-                      : ""}
-                  </p>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-              <p className="text-sm text-gray-700">
-                No payment channels were returned by CommercePay. The checkout
-                will continue with the default request flow.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {error && status !== "error" && (
+        {/* Error Message */}
+        {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        <div className="grid gap-3">
-          <button
-            onClick={initiatePayment}
-            disabled={status === "loading" || status === "redirecting"}
-            className={`w-full py-3 px-4 rounded-lg font-semibold transition ${
-              status === "loading" || status === "redirecting"
-                ? "bg-gray-400 text-white cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
-          >
-            {status === "loading" || status === "redirecting" ? (
-              <span className="flex items-center justify-center">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Processing...
-              </span>
-            ) : (
-              "Proceed to Payment"
-            )}
-          </button>
-          <button
-            onClick={() => router.back()}
-            disabled={status === "loading" || status === "redirecting"}
-            className="w-full py-3 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
-          >
-            Cancel
-          </button>
+        {/* Channel Selection */}
+        <div className="mb-4 p-3 bg-white border border-gray-200 rounded-lg">
+          <p className="text-sm font-semibold text-gray-900 mb-2">
+            Payment Channel
+          </p>
+
+          {channelsLoading && (
+            <p className="text-sm text-gray-500">
+              Loading available channels...
+            </p>
+          )}
+
+          {channelsError && (
+            <p className="text-sm text-amber-700">{channelsError}</p>
+          )}
+
+          {!channelsLoading && channels.length > 0 && (
+            <div className="space-y-2">
+              {channels.map((channel) => {
+                const rawId = String(
+                  channel?.channelId ?? channel?.id ?? channel?.value ?? "",
+                ).trim();
+                const channelLabel =
+                  channel?.displayName ||
+                  channel?.channelName ||
+                  channel?.name ||
+                  `Channel ${rawId}`;
+
+                return (
+                  <label
+                    key={rawId}
+                    className="flex items-center p-2 rounded border border-gray-200 hover:border-blue-300 cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="commercepay-channel"
+                      value={rawId}
+                      checked={selectedChannelId === rawId}
+                      onChange={() => setSelectedChannelId(rawId)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-800">
+                      {channelLabel}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
 
+        {/* Payment Button */}
+        <button
+          onClick={initiatePayment}
+          disabled={
+            (["loading", "redirecting"] as PaymentStatus[]).includes(status) ||
+            channelsLoading
+          }
+          className={`w-full py-3 px-4 rounded-lg font-semibold transition mb-3 ${
+            (["loading", "redirecting"] as PaymentStatus[]).includes(status) ||
+            channelsLoading
+              ? "bg-gray-400 text-white cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          {(["loading", "redirecting"] as PaymentStatus[]).includes(status) ||
+          channelsLoading ? (
+            <span className="flex items-center justify-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              {channelsLoading ? "Loading channels..." : "Processing..."}
+            </span>
+          ) : (
+            "Proceed to Payment"
+          )}
+        </button>
+
+        {/* Cancel Button */}
+        <button
+          onClick={() => router.back()}
+          disabled={(["loading", "redirecting"] as PaymentStatus[]).includes(
+            status,
+          )}
+          className="w-full py-2 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+        >
+          Cancel
+        </button>
+
+        {/* Security Info */}
         <div className="mt-6 pt-4 border-t border-gray-200">
           <div className="flex items-start">
             <svg
@@ -500,35 +570,13 @@ export default function CommercePayPaymentPage() {
               />
             </svg>
             <p className="text-xs text-gray-600">
-              Your payment flow is securely routed by CommercePay through our
-              checkout interface.
+              Your payment information is secure and encrypted by CommercePay.
             </p>
           </div>
         </div>
-
-        {(status === "embedded" || status === "iframe") && (
-          <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
-              Payment Checkout
-            </h3>
-            {status === "embedded" ? (
-              <div id="commercepay-embed-container" className="min-h-[400px]" />
-            ) : (
-              <iframe
-                title="CommercePay Checkout"
-                src={iframeUrl}
-                className="w-full min-h-[700px] rounded-xl border border-gray-200"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-top-navigation-by-user-activation"
-              />
-            )}
-            <p className="mt-3 text-sm text-gray-600">
-              If the embedded checkout doesn’t appear, try refreshing or
-              selecting a different channel.
-            </p>
-          </div>
-        )}
       </div>
 
+      {/* Toasts */}
       <div className="fixed bottom-4 right-4 space-y-2">
         {toasts.map((toast) => (
           <Toast

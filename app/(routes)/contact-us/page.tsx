@@ -57,9 +57,9 @@ export default function ContactUsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 max-w-5xl mx-auto ">
-          <div className="bg-gradient-to-br w-max mx-auto from-primary_green/5 to-primary_green/10 rounded-2xl p-8 shadow-md border border-primary_green/20 h-full flex flex-col justify-between">
-            <div>
+        <div className="grid grid-cols-1 w gap-8 max-w-5xl mx-auto ">
+          <div className="bg-gradient-to-br mx-auto from-primary_green/5 to-primary_green/10 rounded-2xl p-8 shadow-md border border-primary_green/20 h-full">
+            <div className="">
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-xl font-bold text-primary_green">
                   Online Payment Gateway

@@ -24,10 +24,10 @@ export default function Footer() {
           <h4 className="font-semibold text-text-primary mb-3">Explore</h4>
           <ul className="space-y-2 text-sm text-text-secondary">
             <li>
-              <a href="/">Tours</a>
+              <Link href="/">Tours</Link>
             </li>
             <li>
-              <a href="/blogs">Blogs</a>
+              <Link href="/blogs">Blogs</Link>
             </li>
           </ul>
         </div>
@@ -36,10 +36,13 @@ export default function Footer() {
           <h4 className="font-semibold text-text-primary mb-3">Support</h4>
           <ul className="space-y-2 text-sm text-text-secondary">
             <li>
-              <a href="/faqs">FAQs</a>
+              <Link href="/faqs">FAQs</Link>
             </li>
             <li>
-              <a href="/privacy-policy">Terms & Conditions</a>
+              <Link href="/privacy-policy">Terms & Conditions</Link>
+            </li>
+            <li>
+              <Link href="/contact-us">Contact Us</Link>
             </li>
           </ul>
         </div>

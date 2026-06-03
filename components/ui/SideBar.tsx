@@ -123,7 +123,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </button>
               <div
                 className={`pl-4 space-y-1 overflow-hidden transition-all duration-300 ${
-                  expandedSections.support ? "max-h-40 mt-2" : "max-h-0"
+                  expandedSections.support ? "max-h-52 mt-2" : "max-h-0"
                 }`}
               >
                 <Link
@@ -132,6 +132,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   className="block px-3 py-2 text-desc_gray rounded-lg hover:bg-neutral-100 hover:text-primary transition-colors"
                 >
                   FAQ
+                </Link>
+                <Link
+                  href="/contact-us"
+                  onClick={onClose}
+                  className="block px-3 py-2 text-desc_gray rounded-lg hover:bg-neutral-100 hover:text-primary transition-colors"
+                >
+                  Contact Us
                 </Link>
               </div>
             </div>

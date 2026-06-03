@@ -7,3 +7,7 @@ npm i date-fns
 
 
 NODE_OPTIONS="--max-old-space-size=2048" npm run build
+
+
+
+grep -in -C 20 "Sweta Bansal" ~/.pm2/logs/backend-api-out.log

@@ -25,6 +25,19 @@ export interface PaymentSessionResponse {
   expiresAt: string;
 }
 
+export interface CommercePayChannel {
+  channelId?: string | number;
+  id?: string | number;
+  value?: string | number;
+  providerChannelId?: string;
+  providerChannelCode?: string;
+  providerId?: string;
+  displayName?: string;
+  channelName?: string;
+  name?: string;
+  [key: string]: any;
+}
+
 /**
  * Payment Status Response
  */
@@ -142,6 +155,11 @@ export class CommercePayApi {
     customerEmail: string;
     amount: number;
     currency?: string;
+    channelId?: string | number;
+    providerChannelId?: string;
+    packageType?: string;
+    packageId?: string;
+    [key: string]: any;
   }): Promise<ApiResponse<PaymentSessionResponse>> {
     try {
       // Validate input
@@ -152,14 +170,28 @@ export class CommercePayApi {
         throw new Error('Valid amount is required');
       }
 
+      const { channelId, providerChannelId, ...bookingDataWithoutChannels } = bookingData;
+
+      const requestBody: any = {
+        bookingData: bookingDataWithoutChannels,
+        amount: bookingData.amount,
+        currency: bookingData.currency || 'MYR',
+      };
+
+      if (channelId !== undefined && channelId !== null && String(channelId).trim() !== '') {
+        const rawChannelId = String(channelId).trim();
+        const parsedChannelId = Number(rawChannelId);
+        requestBody.channelId = Number.isNaN(parsedChannelId) ? rawChannelId : parsedChannelId;
+      }
+
+      if (providerChannelId && String(providerChannelId).trim() !== '') {
+        requestBody.providerChannelId = providerChannelId;
+      }
+
       const response = await this.request<PaymentSessionResponse>(
         'POST',
         '/create-session',
-        {
-          bookingData,
-          amount: bookingData.amount,
-          currency: bookingData.currency || 'MYR',
-        },
+        requestBody,
         { retries: 2, timeout: 30000 }
       );
 
@@ -178,6 +210,30 @@ export class CommercePayApi {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to create payment session',
         code: 'SESSION_CREATION_FAILED',
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * Fetch available payment channels by country
+   */
+  async getAvailableChannels(countryCode: string = 'MY'): Promise<ApiResponse<CommercePayChannel[]>> {
+    try {
+      const response = await this.request<CommercePayChannel[]>(
+        'GET',
+        `/channels?countryCode=${encodeURIComponent(countryCode)}`,
+        undefined,
+        { retries: 2, timeout: 20000 }
+      );
+
+      return response;
+    } catch (error) {
+      console.error('[CommercePay API] getAvailableChannels error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to fetch channels',
+        code: 'CHANNEL_FETCH_FAILED',
         error: error instanceof Error ? error.message : String(error),
       };
     }
@@ -366,6 +422,8 @@ export function getCommercePayApi(): CommercePayApi {
 export const commercePayApi = {
   createSession: (data: Parameters<CommercePayApi['createPaymentSession']>[0]) =>
     getCommercePayApi().createPaymentSession(data),
+  getAvailableChannels: (countryCode?: string) =>
+    getCommercePayApi().getAvailableChannels(countryCode),
   handleCallback: (transactionNumber: string, referenceCode: string) =>
     getCommercePayApi().handlePaymentCallback(transactionNumber, referenceCode),
   checkStatus: (referenceCode: string) => getCommercePayApi().verifyPaymentStatus(referenceCode),

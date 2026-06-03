@@ -9,6 +9,22 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { commercePayApi } from "@/lib/commercepayApi";
 import Toast from "@/components/ui/Toast";
+
+interface ChannelItem {
+  channelId?: string | number;
+  id?: string | number;
+  value?: string | number;
+  providerChannelId?: string;
+  providerChannelCode?: string;
+  providerId?: string;
+  displayName?: string;
+  channelName?: string;
+  name?: string;
+  providerName?: string;
+  providerChannelName?: string;
+  [key: string]: any;
+}
+
 interface BookingData {
   bookingId?: string;
   packageId?: string;
@@ -103,6 +119,44 @@ export default function CommercePayPaymentPage() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const fetchChannels = async () => {
+      if (!bookingData) return;
+
+      setChannelsLoading(true);
+      setChannelsError("");
+
+      try {
+        const response = await commercePayApi.getAvailableChannels("MY");
+
+        if (!response.success) {
+          throw new Error(
+            response.message || "Failed to load payment channels",
+          );
+        }
+
+        const list = Array.isArray(response.data) ? response.data : [];
+        setChannels(list);
+
+        if (list.length > 0) {
+          const first = list[0];
+          const firstId = String(
+            first?.channelId ?? first?.id ?? first?.value ?? "",
+          ).trim();
+          setSelectedChannelId(firstId);
+        }
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Unable to load channels";
+        setChannelsError(msg);
+      } finally {
+        setChannelsLoading(false);
+      }
+    };
+
+    fetchChannels();
+  }, [bookingData]);
+
   // Add toast notification
   const addToast = useCallback(
     (message: string, type: "success" | "error" | "info" = "info") => {
@@ -134,7 +188,50 @@ export default function CommercePayPaymentPage() {
 
       // Create payment session WITHOUT a bookingId first
       // The payment session itself acts as the reservation holder
+      const activeChannel = channels.find((channel) => {
+        const channelCandidate = String(
+          channel?.channelId ?? channel?.id ?? channel?.value ?? "",
+        ).trim();
+        return channelCandidate === selectedChannelId;
+      });
+
+      const rawChannelIdToSend = String(
+        activeChannel?.channelId ??
+          activeChannel?.id ??
+          activeChannel?.value ??
+          selectedChannelId ??
+          "",
+      ).trim();
+
+      const parsedChannelId = Number(rawChannelIdToSend);
+      const channelIdToSend = Number.isNaN(parsedChannelId)
+        ? rawChannelIdToSend
+        : parsedChannelId;
+
+      const providerChannelIdToSend = String(
+        activeChannel?.providerChannelId ??
+          activeChannel?.providerChannelCode ??
+          activeChannel?.providerId ??
+          "",
+      ).trim();
+
+      const effectiveBookingData = {
+        ...bookingData,
+        packageType: bookingData.packageType || bookingData.type,
+        packageId: bookingData.packageId || bookingData.id,
+      };
+
+      if (
+        !effectiveBookingData.packageType ||
+        !effectiveBookingData.packageId
+      ) {
+        throw new Error(
+          "Booking data is incomplete. Please restart checkout and try again.",
+        );
+      }
+
       const response = await commercePayApi.createSession({
+        ...effectiveBookingData,
         bookingId: tempReferenceCode,
         packageName:
           bookingData.title || bookingData.packageName || "Tour Booking",
@@ -179,7 +276,7 @@ export default function CommercePayPaymentPage() {
       addToast(errorMessage, "error");
       setStatus("error");
     }
-  }, [bookingData, addToast]);
+  }, [bookingData, channels, selectedChannelId, addToast]);
 
   // Handle page load - if payment callback is detected, process it
   useEffect(() => {
@@ -384,22 +481,76 @@ export default function CommercePayPaymentPage() {
           </div>
         )}
 
+        {/* Channel Selection */}
+        <div className="mb-4 p-3 bg-white border border-gray-200 rounded-lg">
+          <p className="text-sm font-semibold text-gray-900 mb-2">
+            Payment Channel
+          </p>
+
+          {channelsLoading && (
+            <p className="text-sm text-gray-500">
+              Loading available channels...
+            </p>
+          )}
+
+          {channelsError && (
+            <p className="text-sm text-amber-700">{channelsError}</p>
+          )}
+
+          {!channelsLoading && channels.length > 0 && (
+            <div className="space-y-2">
+              {channels.map((channel) => {
+                const rawId = String(
+                  channel?.channelId ?? channel?.id ?? channel?.value ?? "",
+                ).trim();
+                const channelLabel =
+                  channel?.displayName ||
+                  channel?.channelName ||
+                  channel?.name ||
+                  `Channel ${rawId}`;
+
+                return (
+                  <label
+                    key={rawId}
+                    className="flex items-center p-2 rounded border border-gray-200 hover:border-blue-300 cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="commercepay-channel"
+                      value={rawId}
+                      checked={selectedChannelId === rawId}
+                      onChange={() => setSelectedChannelId(rawId)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-800">
+                      {channelLabel}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Payment Button */}
         <button
           onClick={initiatePayment}
-          disabled={(["loading", "redirecting"] as PaymentStatus[]).includes(
-            status,
-          )}
+          disabled={
+            (["loading", "redirecting"] as PaymentStatus[]).includes(status) ||
+            channelsLoading
+          }
           className={`w-full py-3 px-4 rounded-lg font-semibold transition mb-3 ${
-            (["loading", "redirecting"] as PaymentStatus[]).includes(status)
+            (["loading", "redirecting"] as PaymentStatus[]).includes(status) ||
+            channelsLoading
               ? "bg-gray-400 text-white cursor-not-allowed"
               : "bg-blue-600 text-white hover:bg-blue-700"
           }`}
         >
-          {(["loading", "redirecting"] as PaymentStatus[]).includes(status) ? (
+          {(["loading", "redirecting"] as PaymentStatus[]).includes(status) ||
+          channelsLoading ? (
             <span className="flex items-center justify-center">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-              Processing...
+              {channelsLoading ? "Loading channels..." : "Processing..."}
             </span>
           ) : (
             "Proceed to Payment"

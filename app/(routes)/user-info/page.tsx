@@ -474,17 +474,20 @@ export default function UserInfoPage() {
               <label className="block text-sm font-semibold text-gray-900">
                 Payment Method
               </label>
-
               <div className="grid grid-cols-2 gap-3">
                 <label
-                  className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all border-blue-600 bg-blue-50`}
+                  className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                    paymentMethod === "stripe"
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
                 >
                   <input
                     type="radio"
                     name="payment-method"
                     value="stripe"
-                    checked
-                    readOnly
+                    checked={paymentMethod === "stripe"}
+                    onChange={() => setPaymentMethod("stripe")}
                     className="mr-2 cursor-pointer"
                   />
                   <span className="text-sm font-medium">Stripe</span>

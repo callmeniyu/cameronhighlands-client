@@ -58,10 +58,12 @@ export default function CommercePayPaymentPage() {
   const [status, setStatus] = useState<PaymentStatus>("idle");
   const [error, setError] = useState<string>("");
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
-  const [channels, setChannels] = useState<ChannelItem[]>([]);
-  const [selectedChannelId, setSelectedChannelId] = useState<string>("");
-  const [channelsLoading, setChannelsLoading] = useState<boolean>(false);
-  const [channelsError, setChannelsError] = useState<string>("");
+  const [channelId, setChannelId] = useState<number | string | undefined>(
+    undefined,
+  );
+  const [providerChannelId, setProviderChannelId] = useState<
+    string | undefined
+  >(undefined);
   const [toasts, setToasts] = useState<
     Array<{ id: string; message: string; type: "success" | "error" | "info" }>
   >([]);
@@ -94,6 +96,21 @@ export default function CommercePayPaymentPage() {
 
       data.amount = parsedAmount;
       setBookingData(data);
+
+      const queryChannelId = searchParams?.get("channelId");
+      if (queryChannelId) {
+        setChannelId(queryChannelId);
+      } else if (data.channelId !== undefined) {
+        setChannelId(data.channelId);
+      }
+
+      const queryProviderChannelId = searchParams?.get("providerChannelId");
+      if (queryProviderChannelId) {
+        setProviderChannelId(queryProviderChannelId);
+      } else if (data.providerChannelId) {
+        setProviderChannelId(data.providerChannelId);
+      }
+
       sessionStorage.setItem("bookingData", bookingJson);
     } catch (err) {
       console.error("Error parsing booking data:", err);
@@ -226,12 +243,8 @@ export default function CommercePayPaymentPage() {
           bookingData.contactInfo?.email || bookingData.customerEmail || "",
         amount: bookingData.amount || 0,
         currency: "MYR",
-        ...(String(channelIdToSend ?? "").trim()
-          ? { channelId: channelIdToSend }
-          : {}),
-        ...(providerChannelIdToSend
-          ? { providerChannelId: providerChannelIdToSend }
-          : {}),
+        ...(channelId !== undefined ? { channelId } : {}),
+        ...(providerChannelId ? { providerChannelId } : {}),
       });
 
       if (!response.success) {

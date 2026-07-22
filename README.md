@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mossy Forest Tours
 
-## Getting Started
+Booking platform for a Malaysia travel operator, delivering customer-facing tour and transfer booking flows, Stripe checkout, PDF/email confirmations, backend booking management and integration of third party channel manager Excely.
 
-First, run the development server:
+• 90-day rolling timeslot generation with automated slot closing based on a 10-hour
+rule and minimum-person validation
+• Improved business reliability by adding Stripe webhook reconciliation, orphaned payment recovery,
+and transactional Brevo email notifications to improve booking reliability.
+• Solved Malaysia timezone/date consistency, secure REST APIs, session-aware booking retrieval,
+and backend booking management for package discovery and fulfillment.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Responsive design for desktop, tablet, and mobile
+- Tour package showcase
+- Destination information pages
+- Image-rich user interface
+- Contact and inquiry sections
+- Modern and accessible UI
+- Optimized user experience
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Frontend
+- React
+- Vite
+- Tailwind CSS
+- React Router
 
-## Learn More
+### Backend
+- Node.js
+- Express.js
 
-To learn more about Next.js, take a look at the following resources:
+### Database
+- MongoDB
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Highlights
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Developed a complete full-stack tourism website for a real-world client.
+- Built reusable UI components for a consistent user experience.
+- Designed responsive layouts to support multiple screen sizes.
+- Implemented dynamic content rendering for tour-related information.
+- Focused on performance, usability, and maintainable project structure.
 
-## Deploy on Vercel
+## Repository Notice
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This repository is shared as a portfolio project to demonstrate development work.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Some project assets, configurations, and business-specific functionality may be simplified or omitted to respect client privacy.
